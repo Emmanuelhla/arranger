@@ -61,6 +61,36 @@
             opacity: 1;
             pointer-events: auto;
         }
+        /* Mobile-first approach for full-screen view */
+        @media (max-width: 1023px) {
+            body {
+                min-height: 100vh; /* Ensures full screen height */
+                overflow: hidden; /* Prevents scrolling */
+            }
+            main {
+                height: 100vh; /* Make main container full height */
+                justify-content: space-between; /* Distributes space vertically */
+            }
+            #game-container {
+                flex-direction: column;
+                flex-grow: 1;
+            }
+            #puzzle-board, #puzzle-pieces-container {
+                max-height: 40vh; /* Limit the height of puzzle areas on mobile */
+                width: 90vw; /* Make them wider for mobile */
+            }
+            .button-group {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: center;
+            }
+            .button-group button {
+                width: 80%;
+            }
+            #status-message {
+                margin-top: auto; /* Push status message to the bottom */
+            }
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -467,9 +497,8 @@
                 currentLevel = 0;
             });
             
-            // This is the specific change to address the user's request.
             exitGameButton.addEventListener('click', () => {
-                window.close(); // Closes the current browser window/tab
+                window.close();
             });
 
             howToPlayButton.addEventListener('click', () => {
