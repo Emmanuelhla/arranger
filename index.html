@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Arranger Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Dark background for a professional feel */
+            color: #c9d1d9; /* Light gray text for readability */
+        }
+        .bg-gradient-header {
+            background-image: linear-gradient(to right, #38bdf8, #818cf8);
+        }
+        .modal-content {
+            background-color: #161b22; /* Darker modal background */
+            color: #c9d1d9;
+        }
+        .puzzle-piece {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            background-repeat: no-repeat;
+        }
+        .puzzle-piece:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .puzzle-piece.dragging {
+            opacity: 0.7;
+            transform: scale(1.1);
+            cursor: grabbing;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .modal {
+            display: none;
+        }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.75);
+        }
+        .hint-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.85); /* Darker hint overlay */
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none;
+        }
+        .hint-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="category-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">
+            <h2 class="text-3xl font-bold mb-4 text-indigo-400">Select a Puzzle Category</h2>
+            <p class="text-lg text-gray-400 mb-6">
+                Choose a category to test your arranging skills!
+            </p>
+            <div id="category-buttons" class="grid grid-cols-2 gap-4">
+                <button data-category="animals" class="px-8 py-4 bg-teal-500 text-white font-bold rounded-lg shadow-lg hover:bg-teal-600 transition-colors duration-300">
+                    Animals 🐾
+                </button>
+                <button data-category="arts" class="px-8 py-4 bg-purple-500 text-white font-bold rounded-lg shadow-lg hover:bg-purple-600 transition-colors duration-300">
+                    Arts 🎨
+                </button>
+                <button data-category="cities" class="px-8 py-4 bg-sky-500 text-white font-bold rounded-lg shadow-lg hover:bg-sky-600 transition-colors duration-300">
+                    Cities 🏙️
+                </button>
+                <button data-category="luxury-cars" class="px-8 py-4 bg-amber-500 text-white font-bold rounded-lg shadow-lg hover:bg-amber-600 transition-colors duration-300">
+                    Luxury Cars 🏎️
+                </button>
+            </div>
+            <div class="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+                <button id="show-about-button" class="px-6 py-2 text-indigo-400 font-bold underline hover:text-indigo-300 transition-colors duration-300">
+                    About Us
+                </button>
+                <button id="exit-game-button" class="px-6 py-2 bg-red-600 text-white font-bold rounded-full shadow-lg hover:bg-red-700 transition-colors duration-300">
+                    Exit Game
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="how-to-play-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">
+            <h2 class="text-3xl font-bold mb-4 text-indigo-400">How to Play</h2>
+            <p class="text-lg text-gray-400 mb-6 text-left">
+                1. Select a puzzle category from the main screen.<br>
+                2. Drag and drop the scrambled pieces from the right panel into the correct positions on the left puzzle board.<br>
+                3. Complete all the puzzles in a category to win!<br>
+                4. Use the "Show Hint" button if you get stuck.<br>
+                5. Use the "Reset Puzzle" button to reshuffle the current puzzle.<br>
+                6. Click "Exit" to go back to the category selection.
+            </p>
+            <button id="close-instructions-button" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
+                Got It!
+            </button>
+        </div>
+    </div>
+    
+    <div id="about-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">
+            <h2 class="text-3xl font-bold mb-4 text-indigo-400">About IconView Tech Enterprises</h2>
+            <p class="text-lg text-gray-400 mb-6 text-left">
+                We are a software company dedicated to creating engaging and educational applications. Our flagship product, **The Arranger Game**, is designed to improve cognitive skills such as spatial reasoning and problem-solving through interactive puzzles. We believe that learning should be fun and accessible to everyone.
+            </p>
+            <button id="close-about-button" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
+                Back
+            </button>
+        </div>
+    </div>
+
+
+    <main class="w-full max-w-4xl p-6 bg-slate-800 shadow-xl rounded-2xl flex flex-col items-center gap-6 border border-gray-700">
+
+        <h1 id="main-title" class="text-4xl font-extrabold text-white tracking-tight text-center flex items-center justify-center gap-2 bg-gradient-header rounded-full px-6 py-2">
+        </h1>
+        <p id="game-progress" class="text-lg text-gray-400 text-center">Puzzle 1 of 5 | Level 1 of 5</p>
+
+        <div id="game-container" class="flex flex-col lg:flex-row items-center gap-8 w-full p-4">
+            <div id="puzzle-board" class="grid w-full lg:w-1/2 aspect-square p-2 bg-gray-900 border-4 border-dashed border-gray-600 rounded-lg relative">
+                <div id="hint-overlay" class="hint-overlay"></div>
+            </div>
+
+            <div id="puzzle-pieces-container" class="grid w-full lg:w-1/2 aspect-square p-2 bg-gray-900 rounded-lg">
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+            <button id="show-hint-button" class="px-6 py-2 bg-yellow-500 text-white font-bold rounded-full shadow-lg hover:bg-yellow-600 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:ring-opacity-50">
+                Show Hint
+            </button>
+            <button id="reset-button" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
+                Reset Puzzle
+            </button>
+            <button id="next-button" class="px-6 py-2 bg-emerald-500 text-white font-bold rounded-full shadow-lg hover:bg-emerald-600 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50">
+                Next Puzzle
+            </button>
+            <button id="exit-button" class="px-6 py-2 bg-red-600 text-white font-bold rounded-full shadow-lg hover:bg-red-700 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-50">
+                Exit
+            </button>
+        </div>
+        <button id="how-to-play-button" class="mt-4 px-6 py-2 text-indigo-400 font-bold underline hover:text-indigo-300 transition-colors duration-300">
+            How to Play
+        </button>
+
+        <div id="status-message" class="text-xl font-semibold text-center text-gray-400 transition-opacity duration-300 mt-4">
+        </div>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const puzzleBoard = document.getElementById('puzzle-board');
+            const piecesContainer = document.getElementById('puzzle-pieces-container');
+            const statusMessage = document.getElementById('status-message');
+            const resetButton = document.getElementById('reset-button');
+            const showHintButton = document.getElementById('show-hint-button');
+            const nextButton = document.getElementById('next-button');
+            const exitButton = document.getElementById('exit-button');
+            const howToPlayButton = document.getElementById('how-to-play-button');
+            const gameProgress = document.getElementById('game-progress');
+            
+            const categoryModal = document.getElementById('category-modal');
+            const categoryButtons = document.getElementById('category-buttons');
+            const exitGameButton = document.getElementById('exit-game-button');
+            
+            const howToPlayModal = document.getElementById('how-to-play-modal');
+            const closeInstructionsButton = document.getElementById('close-instructions-button');
+            
+            const aboutModal = document.getElementById('about-modal');
+            const showAboutButton = document.getElementById('show-about-button');
+            const closeAboutButton = document.getElementById('close-about-button');
+            
+            const hintOverlay = document.getElementById('hint-overlay');
+            const mainTitle = document.getElementById('main-title');
+            
+            const puzzleSets = {
+                animals: {
+                    title: "Animal Arranger 🐾",
+                    puzzles: [
+                        { name: "Lion", img: "assets/lion.jpg" },
+                        { name: "Elephant", img: "assets/elephant.jpg" },
+                        { name: "Panda", img: "assets/panda.jpg" },
+                        { name: "Rabbit", img: "assets/rabbit.jpg" },
+                        { name: "Cat", img: "assets/cat.jpg" }
+                    ]
+                },
+                arts: {
+                    title: "Art Arranger 🎨",
+                    puzzles: [
+                        { name: "Mona Lisa", img: "assets/mona-lisa.jpg" },
+                        { name: "Starry Night", img: "assets/starry-night.jpg" },
+                        { name: "The Scream", img: "assets/the-scream.jpg" },
+                        { name: "The Thinker", img: "assets/the-thinker.jpg" },
+                        { name: "Cubism", img: "assets/cubism.jpg" }
+                    ]
+                },
+                cities: {
+                    title: "City Arranger 🏙️",
+                    puzzles: [
+                        { name: "London", img: "assets/london.jpg" },
+                        { name: "Paris", img: "assets/paris.jpg" },
+                        { name: "Cairo", img: "assets/cairo.jpg" },
+                        { name: "Tokyo", img: "assets/tokyo.jpg" },
+                        { name: "Sydney", img: "assets/sydney.jpg" }
+                    ]
+                },
+                "luxury-cars": {
+                    title: "Luxury Car Arranger 🏎️",
+                    puzzles: [
+                        { name: "Lamborghini Huracán", img: "assets/lamborghini.jpg" },
+                        { name: "Rolls-Royce Ghost", img: "assets/rolls-royce.jpg" },
+                        { name: "Bentley Continental GT", img: "assets/bentley.jpg" },
+                        { name: "McLaren 720S", img: "assets/mclaren.jpg" },
+                        { name: "Bugatti Chiron", img: "assets/bugatti.jpg" }
+                    ]
+                }
+            };
+
+            const difficultyLevels = [3, 4, 5, 6, 7]; 
+            
+            let currentCategory = null;
+            let currentPuzzleIndex = 0;
+            let currentCategoryPuzzles = null;
+            let currentLevel = 0;
+            let draggingPiece = null;
+            
+            function initializeGame(category, puzzleIndex, level) {
+                puzzleBoard.innerHTML = '';
+                piecesContainer.innerHTML = '';
+                statusMessage.textContent = ``;
+
+                currentCategory = category;
+                currentPuzzleIndex = puzzleIndex;
+                currentLevel = level;
+                currentCategoryPuzzles = puzzleSets[category].puzzles;
+
+                const cols = difficultyLevels[level];
+                const rows = difficultyLevels[level];
+                const totalPieces = rows * cols;
+                
+                puzzleBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                piecesContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                puzzleBoard.style.gap = `${2 / (level + 1)}vmin`;
+                piecesContainer.style.gap = `${2 / (level + 1)}vmin`;
+
+                const currentPuzzle = currentCategoryPuzzles[puzzleIndex];
+                
+                mainTitle.innerHTML = `
+                    The Arranger Game: ${puzzleSets[category].title}
+                `;
+                gameProgress.textContent = `Puzzle ${puzzleIndex + 1} of ${currentCategoryPuzzles.length} | Level ${level + 1} of ${difficultyLevels.length}`;
+
+                const pieces = [];
+                for (let i = 0; i < totalPieces; i++) {
+                    const row = Math.floor(i / cols);
+                    const col = i % cols;
+                    
+                    const piece = document.createElement('div');
+                    piece.classList.add('puzzle-piece', 'bg-white', 'rounded-lg', 'shadow-md', 'border-2', 'border-gray-300', 'aspect-square');
+                    piece.setAttribute('draggable', 'true');
+                    piece.dataset.id = i;
+                    
+                    piece.style.backgroundImage = `url('${currentPuzzle.img}')`;
+                    piece.style.backgroundSize = `${cols * 100}% ${rows * 100}%`;
+                    piece.style.backgroundPosition = `calc(${100 / (cols - 1)}% * ${col}) calc(${100 / (rows - 1)}% * ${row})`;
+
+                    pieces.push(piece);
+                }
+
+                for (let i = 0; i < totalPieces; i++) {
+                    const dropZone = document.createElement('div');
+                    dropZone.classList.add('w-full', 'h-full', 'drop-zone');
+                    dropZone.dataset.id = i;
+                    puzzleBoard.appendChild(dropZone);
+                }
+                
+                puzzleBoard.appendChild(hintOverlay);
+
+                const shuffledPieces = [...pieces].sort(() => Math.random() - 0.5);
+                shuffledPieces.forEach(piece => {
+                    piecesContainer.appendChild(piece);
+                });
+
+                resetButton.textContent = "Reset Puzzle";
+            }
+
+            // --- Drag and Drop Event Listeners ---
+            piecesContainer.addEventListener('dragstart', (e) => {
+                const target = e.target.closest('.puzzle-piece');
+                if (target) {
+                    draggingPiece = target;
+                    target.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', target.dataset.id);
+                }
+            });
+
+            piecesContainer.addEventListener('dragend', (e) => {
+                const target = e.target.closest('.puzzle-piece');
+                if (target) {
+                    target.classList.remove('dragging');
+                    draggingPiece = null;
+                }
+            });
+            
+            puzzleBoard.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const dropZone = e.target.closest('.drop-zone');
+                if (dropZone && !dropZone.hasChildNodes()) {
+                    dropZone.classList.add('bg-indigo-200');
+                }
+            });
+            
+            puzzleBoard.addEventListener('dragleave', (e) => {
+                const dropZone = e.target.closest('.drop-zone');
+                if (dropZone) {
+                    dropZone.classList.remove('bg-indigo-200');
+                }
+            });
+
+            puzzleBoard.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const dropZone = e.target.closest('.drop-zone');
+                const pieceId = e.dataTransfer.getData('text/plain');
+                const piece = document.querySelector(`.puzzle-piece[data-id="${pieceId}"]`);
+                
+                if (dropZone && !dropZone.hasChildNodes() && piece) {
+                    dropZone.classList.remove('bg-indigo-200');
+                    dropZone.appendChild(piece);
+                    checkWin();
+                }
+            });
+
+            // --- Win Condition Check ---
+            function checkWin() {
+                const dropZones = Array.from(puzzleBoard.children).filter(el => el.classList.contains('drop-zone'));
+                const solved = dropZones.every(zone => {
+                    const piece = zone.firstElementChild;
+                    return piece && parseInt(piece.dataset.id) === parseInt(zone.dataset.id);
+                });
+
+                if (solved) {
+                    const currentPuzzleName = currentCategoryPuzzles[currentPuzzleIndex].name;
+                    statusMessage.textContent = `✅ Correct! You solved: ${currentPuzzleName}`;
+                    statusMessage.classList.remove('text-gray-400');
+                    statusMessage.classList.add('text-green-400', 'animate-pulse');
+
+                    setTimeout(() => {
+                        if (currentPuzzleIndex < currentCategoryPuzzles.length - 1) {
+                            currentPuzzleIndex++;
+                            initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                        } else if (currentLevel < difficultyLevels.length - 1) {
+                            currentLevel++;
+                            currentPuzzleIndex = 0;
+                            statusMessage.textContent = `Level ${currentLevel + 1} Unlocked! All puzzles complete for this level.`;
+                            initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                        } else {
+                            endGame();
+                        }
+                        statusMessage.classList.remove('text-green-400', 'animate-pulse');
+                        statusMessage.classList.add('text-gray-400');
+                    }, 2000);
+                }
+            }
+            
+            // --- Educational Purpose Function ---
+            function displayEducationalPurpose() {
+                const purposeText = `
+                    <h2 class="text-3xl font-bold mb-4 text-indigo-400">Why Puzzles? 🧠</h2>
+                    <p class="text-lg text-gray-400 mb-6">
+                        Jigsaw puzzles are a fantastic way to improve **spatial reasoning**, **problem-solving**, and **short-term memory**. By matching pieces and visualizing the final image, you're giving your brain a great workout!
+                    </p>
+                    <button id="close-educational-modal" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
+                        Awesome!
+                    </button>
+                `;
+                const modal = document.createElement('div');
+                modal.classList.add('modal', 'fixed', 'inset-0', 'z-50', 'flex', 'items-center', 'justify-center', 'modal-overlay');
+                modal.innerHTML = `<div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">${purposeText}</div>`;
+                document.body.appendChild(modal);
+                modal.style.display = 'flex';
+
+                document.getElementById('close-educational-modal').addEventListener('click', () => {
+                    modal.style.display = 'none';
+                    modal.remove();
+                });
+            }
+
+            function endGame() {
+                puzzleBoard.innerHTML = '';
+                piecesContainer.innerHTML = '';
+                mainTitle.innerHTML = `
+                    <h1 class="text-4xl font-extrabold text-white tracking-tight text-center">Congratulations! 🎉</h1>
+                `;
+                gameProgress.textContent = "You've successfully completed all puzzles in this category!";
+                statusMessage.textContent = "You are a master Arranger!";
+                statusMessage.classList.add('text-blue-400', 'animate-pulse');
+                resetButton.textContent = "Play Again?";
+                showHintButton.style.display = 'none';
+                
+                setTimeout(displayEducationalPurpose, 1500);
+            }
+
+            // --- Button Event Listeners ---
+            resetButton.addEventListener('click', () => {
+                if (resetButton.textContent === "Play Again?") {
+                    categoryModal.style.display = 'flex';
+                } else {
+                    initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                }
+                statusMessage.classList.remove('text-blue-400', 'text-green-400', 'animate-pulse', 'text-yellow-400');
+                statusMessage.classList.add('text-gray-400');
+                statusMessage.textContent = "Puzzle reset.";
+            });
+
+            showHintButton.addEventListener('click', () => {
+                const currentPuzzle = currentCategoryPuzzles[currentPuzzleIndex];
+                let hintContent = `<div class="w-full h-full p-2 flex items-center justify-center"><img src="${currentPuzzle.img}" class="w-full h-auto" alt="${currentPuzzle.name}" /></div>`;
+                
+                hintOverlay.innerHTML = hintContent;
+                hintOverlay.classList.add('show');
+                
+                statusMessage.textContent = "Hint used! See the solved image.";
+                statusMessage.classList.add('text-yellow-400');
+
+                setTimeout(() => {
+                    hintOverlay.classList.remove('show');
+                    statusMessage.textContent = "";
+                    statusMessage.classList.remove('text-yellow-400');
+                }, 2000);
+            });
+            
+            nextButton.addEventListener('click', () => {
+                if (currentPuzzleIndex < currentCategoryPuzzles.length - 1) {
+                    currentPuzzleIndex++;
+                    initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                    statusMessage.textContent = "";
+                } else {
+                    currentPuzzleIndex = 0;
+                    initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                    statusMessage.textContent = `Looping back to the start of Level ${currentLevel + 1}!`;
+                }
+            });
+
+            exitButton.addEventListener('click', () => {
+                categoryModal.style.display = 'flex';
+                mainTitle.innerHTML = ``;
+                gameProgress.textContent = ``;
+                statusMessage.textContent = "";
+                currentPuzzleIndex = 0;
+                currentLevel = 0;
+            });
+            
+            // This is the specific change to address the user's request.
+            exitGameButton.addEventListener('click', () => {
+                window.close(); // Closes the current browser window/tab
+            });
+
+            howToPlayButton.addEventListener('click', () => {
+                howToPlayModal.style.display = 'flex';
+            });
+            
+            closeInstructionsButton.addEventListener('click', () => {
+                howToPlayModal.style.display = 'none';
+            });
+            
+            showAboutButton.addEventListener('click', () => {
+                categoryModal.style.display = 'none';
+                aboutModal.style.display = 'flex';
+            });
+            
+            closeAboutButton.addEventListener('click', () => {
+                aboutModal.style.display = 'none';
+                categoryModal.style.display = 'flex';
+            });
+            
+            categoryButtons.addEventListener('click', (e) => {
+                const category = e.target.closest('button')?.dataset.category;
+                if (category) {
+                    categoryModal.style.display = 'none';
+                    currentPuzzleIndex = 0;
+                    currentLevel = 0;
+                    initializeGame(category, currentPuzzleIndex, currentLevel);
+                    showHintButton.style.display = 'inline-block';
+                }
+            });
+
+            categoryModal.style.display = 'flex';
+        });
+    </script>
+</body>
+</html>
