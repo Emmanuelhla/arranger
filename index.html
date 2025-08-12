@@ -61,16 +61,62 @@
             opacity: 1;
             pointer-events: auto;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
+    <div id="auth-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-lg w-full text-center border border-gray-700">
+            <h2 id="auth-title" class="text-3xl font-bold mb-4 text-indigo-400">Login</h2>
+            <p id="auth-status" class="text-lg text-gray-400 mb-6"></p>
+            <form id="auth-form" class="space-y-4">
+                <div id="username-input-group" class="hidden">
+                    <label for="username" class="sr-only">Username</label>
+                    <input type="text" id="username" placeholder="Username" 
+                           class="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label for="email" class="sr-only">Email</label>
+                    <input type="email" id="email" placeholder="Email" required
+                           class="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Password</label>
+                    <input type="password" id="password" placeholder="Password" required
+                           class="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button type="submit" id="auth-submit-button" class="w-full px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
+                    Login
+                </button>
+            </form>
+            <p class="mt-4 text-sm text-gray-400">
+                Don't have an account? <button id="toggle-auth-mode" class="text-indigo-400 hover:underline font-bold">Register now</button>
+            </p>
+            <p class="mt-4 text-sm text-gray-400">
+                <button id="play-as-guest-button" class="text-teal-400 hover:underline font-bold">Play as Guest</button>
+            </p>
+        </div>
+    </div>
+
     <div id="category-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
         <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">
-            <h2 class="text-3xl font-bold mb-4 text-indigo-400">Select a Puzzle Category</h2>
-            <p class="text-lg text-gray-400 mb-6">
-                Choose a category to test your arranging skills!
-            </p>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-indigo-400">Select a Puzzle Category</h2>
+                <div class="flex gap-2 items-center">
+                    <span id="user-info" class="text-sm text-gray-400"></span>
+                    <button id="logout-button" class="px-3 py-1 bg-red-600 text-white text-sm font-bold rounded-full hover:bg-red-700 transition-colors duration-300 hidden">Logout</button>
+                </div>
+            </div>
+            <p class="text-lg text-gray-400 mb-6">Choose a category to test your arranging skills!</p>
+            <div id="game-stats" class="text-center p-4 bg-gray-900 rounded-lg mb-6 hidden">
+                <h3 class="text-xl font-bold text-teal-400 mb-2">Your Progress</h3>
+                <p id="progress-text" class="text-gray-400"></p>
+                <p id="streak-text" class="text-gray-400 mt-2"></p>
+                <p id="daily-puzzle-text" class="text-gray-400 mt-2"></p>
+            </div>
             <div id="category-buttons" class="grid grid-cols-2 gap-4">
                 <button data-category="animals" class="px-8 py-4 bg-teal-500 text-white font-bold rounded-lg shadow-lg hover:bg-teal-600 transition-colors duration-300">
                     Animals 🐾
@@ -125,7 +171,7 @@
         </div>
     </div>
 
-    <main class="w-full max-w-4xl p-6 bg-slate-800 shadow-xl rounded-2xl flex flex-col items-center gap-6 border border-gray-700">
+    <main class="w-full max-w-4xl p-6 bg-slate-800 shadow-xl rounded-2xl flex flex-col items-center gap-6 border border-gray-700 hidden">
 
         <h1 id="main-title" class="text-4xl font-extrabold text-white tracking-tight text-center flex items-center justify-center gap-2 bg-gradient-header rounded-full px-6 py-2">
         </h1>
@@ -163,7 +209,25 @@
 
     </main>
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB_RHhMJFv9gX7DoblcgWBpAUBuqxCdOgY",
+            authDomain: "tag-arranger.firebaseapp.com",
+            projectId: "tag-arranger",
+            storageBucket: "tag-arranger.firebasestorage.app",
+            messagingSenderId: "201750203505",
+            appId: "1:201750203505:web:8c9e885916c14aef579fd0"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
         document.addEventListener('DOMContentLoaded', () => {
             const puzzleBoard = document.getElementById('puzzle-board');
             const piecesContainer = document.getElementById('puzzle-pieces-container');
@@ -188,7 +252,26 @@
             
             const hintOverlay = document.getElementById('hint-overlay');
             const mainTitle = document.getElementById('main-title');
+
+            // Auth Modal elements
+            const authModal = document.getElementById('auth-modal');
+            const authForm = document.getElementById('auth-form');
+            const authTitle = document.getElementById('auth-title');
+            const authSubmitButton = document.getElementById('auth-submit-button');
+            const authStatus = document.getElementById('auth-status');
+            const toggleAuthModeButton = document.getElementById('toggle-auth-mode');
+            const playAsGuestButton = document.getElementById('play-as-guest-button');
+            const usernameInputGroup = document.getElementById('username-input-group');
+            const usernameInput = document.getElementById('username');
             
+            // Category Modal elements
+            const userInfoElement = document.getElementById('user-info');
+            const logoutButton = document.getElementById('logout-button');
+            const gameStats = document.getElementById('game-stats');
+            const progressText = document.getElementById('progress-text');
+            const streakText = document.getElementById('streak-text');
+            const dailyPuzzleText = document.getElementById('daily-puzzle-text');
+
             const puzzleSets = {
                 animals: {
                     title: "Animal Arranger 🐾",
@@ -239,6 +322,177 @@
             let currentCategoryPuzzles = null;
             let currentLevel = 0;
             let draggingPiece = null;
+            let currentUser = null;
+            let userGameData = null;
+            let isRegisterMode = false;
+            let dailyPuzzleUsed = false;
+            let loginStreak = 0;
+
+            function showModal(modal) {
+                const allModals = document.querySelectorAll('.modal');
+                allModals.forEach(m => m.style.display = 'none');
+                modal.style.display = 'flex';
+            }
+
+            function updateAuthUI(isLoggedIn, username = null) {
+                if (isLoggedIn) {
+                    showModal(categoryModal);
+                    userInfoElement.textContent = `Logged in as: ${username}`;
+                    logoutButton.classList.remove('hidden');
+                    gameStats.classList.remove('hidden');
+                } else {
+                    showModal(authModal);
+                    userInfoElement.textContent = `Guest`;
+                    logoutButton.classList.add('hidden');
+                    gameStats.classList.add('hidden');
+                }
+            }
+
+            // Listen for auth state changes
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    currentUser = user;
+                    await loadGameData(user.uid);
+                    updateAuthUI(true, userGameData.username);
+                } else {
+                    currentUser = null;
+                    userGameData = null;
+                    updateAuthUI(false);
+                    // Hide main game UI and show auth modal
+                    document.querySelector('main').style.display = 'none';
+                    showModal(authModal);
+                }
+            });
+
+            // Handle Login/Register form submission
+            authForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = authForm.email.value;
+                const password = authForm.password.value;
+                const username = authForm.username.value;
+                authStatus.textContent = '';
+                
+                try {
+                    if (isRegisterMode) {
+                        // Check if username is provided
+                        if (!username) {
+                            authStatus.textContent = 'Error: Username is required for registration.';
+                            return;
+                        }
+                        await auth.createUserWithEmailAndPassword(email, password);
+                        await initializeUserGameData(auth.currentUser.uid, username);
+                        authStatus.textContent = 'Registration successful! You are now logged in.';
+                    } else {
+                        await auth.signInWithEmailAndPassword(email, password);
+                        authStatus.textContent = 'Login successful!';
+                    }
+                    authForm.reset();
+                } catch (error) {
+                    authStatus.textContent = `Error: ${error.message}`;
+                }
+            });
+            
+            toggleAuthModeButton.addEventListener('click', () => {
+                isRegisterMode = !isRegisterMode;
+                authTitle.textContent = isRegisterMode ? 'Register' : 'Login';
+                authSubmitButton.textContent = isRegisterMode ? 'Register' : 'Login';
+                toggleAuthModeButton.textContent = isRegisterMode ? 'Login instead' : 'Register now';
+                usernameInputGroup.classList.toggle('hidden', !isRegisterMode);
+            });
+
+            playAsGuestButton.addEventListener('click', () => {
+                currentUser = null;
+                userGameData = null;
+                updateAuthUI(false, 'Guest');
+                document.querySelector('main').style.display = 'none';
+                showModal(categoryModal);
+            });
+
+            logoutButton.addEventListener('click', async () => {
+                try {
+                    await auth.signOut();
+                } catch (error) {
+                    console.error("Logout error:", error);
+                }
+            });
+
+            async function initializeUserGameData(uid, username) {
+                const userDocRef = db.collection('users').doc(uid);
+                await userDocRef.set({
+                    username: username,
+                    lastLogin: new Date(),
+                    streak: 1,
+                    dailyPuzzleUsed: false,
+                    gameProgress: {
+                        currentCategory: null,
+                        currentPuzzleIndex: 0,
+                        currentLevel: 0
+                    }
+                });
+            }
+
+            async function loadGameData(uid) {
+                const userDocRef = db.collection('users').doc(uid);
+                const doc = await userDocRef.get();
+                if (doc.exists) {
+                    userGameData = doc.data();
+                    loginStreak = userGameData.streak || 0;
+                    dailyPuzzleUsed = userGameData.dailyPuzzleUsed || false;
+                    
+                    const now = new Date();
+                    const lastLogin = userGameData.lastLogin ? userGameData.lastLogin.toDate() : now;
+                    
+                    const oneDay = 24 * 60 * 60 * 1000;
+                    const diffDays = Math.floor((now - lastLogin) / oneDay);
+                    
+                    if (diffDays === 1) {
+                        loginStreak++;
+                        dailyPuzzleUsed = false;
+                        await userDocRef.update({
+                            lastLogin: now,
+                            streak: loginStreak,
+                            dailyPuzzleUsed: dailyPuzzleUsed
+                        });
+                    } else if (diffDays > 1) {
+                        loginStreak = 1;
+                        dailyPuzzleUsed = false;
+                        await userDocRef.update({
+                            lastLogin: now,
+                            streak: loginStreak,
+                            dailyPuzzleUsed: dailyPuzzleUsed
+                        });
+                    }
+                    
+                    updateGameStatsUI();
+                    
+                } else {
+                    // User data doesn't exist, this should only happen for new users, so we can't load data.
+                    // This case is handled in the registration process.
+                    userGameData = {};
+                    updateGameStatsUI();
+                }
+            }
+
+            function updateGameStatsUI() {
+                if (userGameData) {
+                    progressText.textContent = `Progress: ${userGameData.gameProgress.currentCategory ? `Playing ${puzzleSets[userGameData.gameProgress.currentCategory].title} - Level ${userGameData.gameProgress.currentLevel + 1}` : 'No active game'}`;
+                    streakText.textContent = `Login Streak: ${loginStreak} days 🔥`;
+                    dailyPuzzleText.textContent = `Daily Puzzle: ${dailyPuzzleUsed ? 'Completed today' : 'Available!'}`;
+                }
+            }
+
+            async function saveGameData() {
+                if (currentUser) {
+                    const userDocRef = db.collection('users').doc(currentUser.uid);
+                    await userDocRef.update({
+                        gameProgress: {
+                            currentCategory,
+                            currentPuzzleIndex,
+                            currentLevel
+                        }
+                    });
+                }
+            }
             
             function initializeGame(category, puzzleIndex, level) {
                 puzzleBoard.innerHTML = '';
@@ -249,6 +503,9 @@
                 currentPuzzleIndex = puzzleIndex;
                 currentLevel = level;
                 currentCategoryPuzzles = puzzleSets[category].puzzles;
+                
+                document.querySelector('main').style.display = 'flex';
+                showModal(document.querySelector('main'));
 
                 const cols = difficultyLevels[level];
                 const rows = difficultyLevels[level];
@@ -359,6 +616,7 @@
                     statusMessage.textContent = `✅ Correct! You solved: ${currentPuzzleName}`;
                     statusMessage.classList.remove('text-gray-400');
                     statusMessage.classList.add('text-green-400', 'animate-pulse');
+                    saveGameData();
 
                     setTimeout(() => {
                         if (currentPuzzleIndex < currentCategoryPuzzles.length - 1) {
@@ -419,7 +677,7 @@
             // --- Button Event Listeners ---
             resetButton.addEventListener('click', () => {
                 if (resetButton.textContent === "Play Again?") {
-                    categoryModal.style.display = 'flex';
+                    showModal(categoryModal);
                 } else {
                     initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
                 }
@@ -458,49 +716,69 @@
             });
 
             exitButton.addEventListener('click', () => {
-                categoryModal.style.display = 'flex';
+                showModal(categoryModal);
                 mainTitle.innerHTML = ``;
                 gameProgress.textContent = ``;
                 statusMessage.textContent = "";
+                
+                // Save progress before exiting
+                if (currentUser) {
+                    saveGameData();
+                }
+
                 currentPuzzleIndex = 0;
                 currentLevel = 0;
             });
             
-            // This is the specific change to address the user's request.
             exitGameButton.addEventListener('click', () => {
+                if (currentUser) {
+                    saveGameData();
+                }
                 window.close(); // Closes the current browser window/tab
             });
 
             howToPlayButton.addEventListener('click', () => {
-                howToPlayModal.style.display = 'flex';
+                showModal(howToPlayModal);
             });
             
             closeInstructionsButton.addEventListener('click', () => {
-                howToPlayModal.style.display = 'none';
+                if (currentCategory) {
+                    // Return to the current game if one is active
+                    showModal(document.querySelector('main'));
+                } else {
+                    // Otherwise, go back to the category selection
+                    showModal(categoryModal);
+                }
             });
             
             showAboutButton.addEventListener('click', () => {
-                categoryModal.style.display = 'none';
-                aboutModal.style.display = 'flex';
+                showModal(aboutModal);
             });
             
             closeAboutButton.addEventListener('click', () => {
-                aboutModal.style.display = 'none';
-                categoryModal.style.display = 'flex';
+                showModal(categoryModal);
             });
             
             categoryButtons.addEventListener('click', (e) => {
                 const category = e.target.closest('button')?.dataset.category;
                 if (category) {
-                    categoryModal.style.display = 'none';
-                    currentPuzzleIndex = 0;
-                    currentLevel = 0;
+                    const savedProgress = userGameData?.gameProgress;
+                    if (savedProgress && savedProgress.currentCategory === category && currentUser) {
+                        // Load saved game progress
+                        currentPuzzleIndex = savedProgress.currentPuzzleIndex;
+                        currentLevel = savedProgress.currentLevel;
+                    } else {
+                        // Start a new game for this category
+                        currentPuzzleIndex = 0;
+                        currentLevel = 0;
+                    }
                     initializeGame(category, currentPuzzleIndex, currentLevel);
                     showHintButton.style.display = 'inline-block';
                 }
             });
 
-            categoryModal.style.display = 'flex';
+            // Initially, show the auth modal
+            showModal(authModal);
         });
     </script>
 </body>
