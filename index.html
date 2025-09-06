@@ -9,14 +9,14 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0d1117; /* Dark background for a professional feel */
-            color: #c9d1d9; /* Light gray text for readability */
+            background-color: #0d1117;
+            color: #c9d1d9;
         }
         .bg-gradient-header {
             background-image: linear-gradient(to right, #38bdf8, #818cf8);
         }
         .modal-content {
-            background-color: #161b22; /* Darker modal background */
+            background-color: #161b22;
             color: #c9d1d9;
         }
         .puzzle-piece {
@@ -51,7 +51,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: rgba(0, 0, 0, 0.85); /* Darker hint overlay */
+            background-color: rgba(0, 0, 0, 0.85);
             z-index: 10;
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
@@ -64,10 +64,18 @@
         .hidden {
             display: none;
         }
+        .quiz-option {
+            transition: transform 0.2s ease-in-out, background-color 0.2s;
+        }
+        .quiz-option:hover:not([disabled]) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
+    <!-- Auth Modal -->
     <div id="auth-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
         <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-lg w-full text-center border border-gray-700">
             <h2 id="auth-title" class="text-3xl font-bold mb-4 text-indigo-400">Login</h2>
@@ -75,7 +83,7 @@
             <form id="auth-form" class="space-y-4">
                 <div id="username-input-group" class="hidden">
                     <label for="username" class="sr-only">Username</label>
-                    <input type="text" id="username" placeholder="Username" 
+                    <input type="text" id="username" placeholder="Username"
                            class="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
@@ -95,12 +103,10 @@
             <p class="mt-4 text-sm text-gray-400">
                 Don't have an account? <button id="toggle-auth-mode" class="text-indigo-400 hover:underline font-bold">Register now</button>
             </p>
-            <p class="mt-4 text-sm text-gray-400">
-                <button id="play-as-guest-button" class="text-teal-400 hover:underline font-bold">Play as Guest</button>
-            </p>
         </div>
     </div>
 
+    <!-- Category Modal -->
     <div id="category-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
         <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">
             <div class="flex justify-between items-center mb-6">
@@ -133,7 +139,7 @@
             </div>
             <div class="mt-8 flex flex-col sm:flex-row justify-center gap-4">
                 <button id="show-about-button" class="px-6 py-2 text-indigo-400 font-bold underline hover:text-indigo-300 transition-colors duration-300">
-                    About Us
+                    How to Play
                 </button>
                 <button id="exit-game-button" class="px-6 py-2 bg-red-600 text-white font-bold rounded-full shadow-lg hover:bg-red-700 transition-colors duration-300">
                     Exit Game
@@ -142,7 +148,35 @@
         </div>
     </div>
 
-    <div id="how-to-play-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">
+            <h2 class="text-3xl font-bold mb-4 text-indigo-400">Quick Quiz!</h2>
+            <p id="quiz-question" class="text-lg text-gray-400 mb-6"></p>
+            <div id="quiz-options" class="grid grid-cols-1 gap-4"></div>
+            <p id="quiz-feedback" class="text-lg font-semibold mt-4"></p>
+            <button id="next-from-quiz-button" class="mt-6 px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300 hidden">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <!-- Sticker Modal -->
+    <div id="sticker-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">
+            <h2 class="text-3xl font-bold mb-4 text-green-400">Level Complete!</h2>
+            <p class="text-lg text-gray-400 mb-6">You've earned a sticker!</p>
+            <div class="flex justify-center mb-6">
+                <img id="sticker-image" src="https://placehold.co/150x150/0f172a/94a3b8?text=Sticker" alt="Sticker Reward" class="rounded-full w-32 h-32 object-cover border-4 border-yellow-400">
+            </div>
+            <button id="next-from-sticker-button" class="mt-4 px-8 py-3 bg-emerald-600 text-white font-bold rounded-full shadow-lg hover:bg-emerald-700 transition-colors duration-300">
+                Continue to next level
+            </button>
+        </div>
+    </div>
+    
+    <!-- About Modal - this is now a placeholder for the How to Play modal -->
+    <div id="about-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay hidden">
         <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">
             <h2 class="text-3xl font-bold mb-4 text-indigo-400">How to Play</h2>
             <p class="text-lg text-gray-400 mb-6 text-left">
@@ -153,29 +187,17 @@
                 5. Use the "Reset Puzzle" button to reshuffle the current puzzle.<br>
                 6. Click "Exit" to go back to the category selection.
             </p>
-            <button id="close-instructions-button" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
+            <button id="close-about-button" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
                 Got It!
             </button>
         </div>
     </div>
     
-    <div id="about-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
-        <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">
-            <h2 class="text-3xl font-bold mb-4 text-indigo-400">About IconView Tech Enterprises</h2>
-            <p class="text-lg text-gray-400 mb-6 text-left">
-                We are a software company dedicated to creating engaging and educational applications. Our flagship product, **The Arranger Game**, is designed to improve cognitive skills such as spatial reasoning and problem-solving through interactive puzzles. We believe that learning should be fun and accessible to everyone.
-            </p>
-            <button id="close-about-button" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
-                Back
-            </button>
-        </div>
-    </div>
-
+    <!-- Main Game UI -->
     <main class="w-full max-w-4xl p-6 bg-slate-800 shadow-xl rounded-2xl flex flex-col items-center gap-6 border border-gray-700 hidden">
-
         <h1 id="main-title" class="text-4xl font-extrabold text-white tracking-tight text-center flex items-center justify-center gap-2 bg-gradient-header rounded-full px-6 py-2">
         </h1>
-        <p id="game-progress" class="text-lg text-gray-400 text-center">Puzzle 1 of 5 | Level 1 of 5</p>
+        <p id="game-progress" class="text-lg text-gray-400 text-center"></p>
 
         <div id="game-container" class="flex flex-col lg:flex-row items-center gap-8 w-full p-4">
             <div id="puzzle-board" class="grid w-full lg:w-1/2 aspect-square p-2 bg-gray-900 border-4 border-dashed border-gray-600 rounded-lg relative">
@@ -200,585 +222,756 @@
                 Exit
             </button>
         </div>
-        <button id="how-to-play-button" class="mt-4 px-6 py-2 text-indigo-400 font-bold underline hover:text-indigo-300 transition-colors duration-300">
+        <button id="how-to-play-button" class="mt-4 px-6 py-2 text-indigo-400 font-bold underline hover:text-indigo-300 transition-colors duration-300 hidden">
             How to Play
         </button>
 
         <div id="status-message" class="text-xl font-semibold text-center text-gray-400 transition-opacity duration-300 mt-4">
         </div>
-
     </main>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <script>
-        // Your Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyB_RHhMJFv9gX7DoblcgWBpAUBuqxCdOgY",
-            authDomain: "tag-arranger.firebaseapp.com",
-            projectId: "tag-arranger",
-            storageBucket: "tag-arranger.firebasestorage.app",
-            messagingSenderId: "201750203505",
-            appId: "1:201750203505:web:8c9e885916c14aef579fd0"
-        };
+    <!-- The custom message box to replace alert/confirm -->
+    <div id="message-box" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-sm w-full text-center border border-gray-700">
+            <h2 id="message-title" class="text-xl font-bold mb-4 text-white"></h2>
+            <p id="message-text" class="text-lg text-gray-400 mb-6"></p>
+            <button id="message-ok-button" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">OK</button>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- Firebase Initialization ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Constants and state variables
+        const puzzleBoard = document.getElementById('puzzle-board');
+        const piecesContainer = document.getElementById('puzzle-pieces-container');
+        const statusMessage = document.getElementById('status-message');
+        const resetButton = document.getElementById('reset-button');
+        const showHintButton = document.getElementById('show-hint-button');
+        const nextButton = document.getElementById('next-button');
+        const exitButton = document.getElementById('exit-button');
+        const howToPlayButton = document.getElementById('how-to-play-button');
+        const gameProgress = document.getElementById('game-progress');
         
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        const categoryModal = document.getElementById('category-modal');
+        const categoryButtons = document.getElementById('category-buttons');
+        const exitGameButton = document.getElementById('exit-game-button');
+        
+        const aboutModal = document.getElementById('about-modal');
+        const showAboutButton = document.getElementById('show-about-button');
+        const closeAboutButton = document.getElementById('close-about-button');
+        
+        const hintOverlay = document.getElementById('hint-overlay');
+        const mainTitle = document.getElementById('main-title');
+        
+        // Auth Modal elements
+        const authModal = document.getElementById('auth-modal');
+        const authForm = document.getElementById('auth-form');
+        const authTitle = document.getElementById('auth-title');
+        const authSubmitButton = document.getElementById('auth-submit-button');
+        const authStatus = document.getElementById('auth-status');
+        const toggleAuthModeButton = document.getElementById('toggle-auth-mode');
+        // Removed the playAsGuestButton element
+        const usernameInputGroup = document.getElementById('username-input-group');
+        const usernameInput = document.getElementById('username');
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const puzzleBoard = document.getElementById('puzzle-board');
-            const piecesContainer = document.getElementById('puzzle-pieces-container');
-            const statusMessage = document.getElementById('status-message');
-            const resetButton = document.getElementById('reset-button');
-            const showHintButton = document.getElementById('show-hint-button');
-            const nextButton = document.getElementById('next-button');
-            const exitButton = document.getElementById('exit-button');
-            const howToPlayButton = document.getElementById('how-to-play-button');
-            const gameProgress = document.getElementById('game-progress');
-            
-            const categoryModal = document.getElementById('category-modal');
-            const categoryButtons = document.getElementById('category-buttons');
-            const exitGameButton = document.getElementById('exit-game-button');
-            
-            const howToPlayModal = document.getElementById('how-to-play-modal');
-            const closeInstructionsButton = document.getElementById('close-instructions-button');
-            
-            const aboutModal = document.getElementById('about-modal');
-            const showAboutButton = document.getElementById('show-about-button');
-            const closeAboutButton = document.getElementById('close-about-button');
-            
-            const hintOverlay = document.getElementById('hint-overlay');
-            const mainTitle = document.getElementById('main-title');
+        // Game Stats elements
+        const userInfoElement = document.getElementById('user-info');
+        const logoutButton = document.getElementById('logout-button');
+        const gameStats = document.getElementById('game-stats');
+        const progressText = document.getElementById('progress-text');
+        const streakText = document.getElementById('streak-text');
+        const dailyPuzzleText = document.getElementById('daily-puzzle-text');
 
-            // Auth Modal elements
-            const authModal = document.getElementById('auth-modal');
-            const authForm = document.getElementById('auth-form');
-            const authTitle = document.getElementById('auth-title');
-            const authSubmitButton = document.getElementById('auth-submit-button');
-            const authStatus = document.getElementById('auth-status');
-            const toggleAuthModeButton = document.getElementById('toggle-auth-mode');
-            const playAsGuestButton = document.getElementById('play-as-guest-button');
-            const usernameInputGroup = document.getElementById('username-input-group');
-            const usernameInput = document.getElementById('username');
-            
-            // Category Modal elements
-            const userInfoElement = document.getElementById('user-info');
-            const logoutButton = document.getElementById('logout-button');
-            const gameStats = document.getElementById('game-stats');
-            const progressText = document.getElementById('progress-text');
-            const streakText = document.getElementById('streak-text');
-            const dailyPuzzleText = document.getElementById('daily-puzzle-text');
+        // Quiz Modal elements
+        const quizModal = document.getElementById('quiz-modal');
+        const quizQuestionElement = document.getElementById('quiz-question');
+        const quizOptionsElement = document.getElementById('quiz-options');
+        const quizFeedbackElement = document.getElementById('quiz-feedback');
+        const nextFromQuizButton = document.getElementById('next-from-quiz-button');
 
-            const puzzleSets = {
-                animals: {
-                    title: "Animal Arranger 🐾",
-                    puzzles: [
-                        { name: "Lion", img: "assets/lion.jpg" },
-                        { name: "Elephant", img: "assets/elephant.jpg" },
-                        { name: "Panda", img: "assets/panda.jpg" },
-                        { name: "Rabbit", img: "assets/rabbit.jpg" },
-                        { name: "Cat", img: "assets/cat.jpg" }
-                    ]
-                },
-                arts: {
-                    title: "Art Arranger 🎨",
-                    puzzles: [
-                        { name: "Mona Lisa", img: "assets/mona-lisa.jpg" },
-                        { name: "Starry Night", img: "assets/starry-night.jpg" },
-                        { name: "The Scream", img: "assets/the-scream.jpg" },
-                        { name: "The Thinker", img: "assets/the-thinker.jpg" },
-                        { name: "Cubism", img: "assets/cubism.jpg" }
-                    ]
-                },
-                cities: {
-                    title: "City Arranger 🏙️",
-                    puzzles: [
-                        { name: "London", img: "assets/london.jpg" },
-                        { name: "Paris", img: "assets/paris.jpg" },
-                        { name: "Cairo", img: "assets/cairo.jpg" },
-                        { name: "Tokyo", img: "assets/tokyo.jpg" },
-                        { name: "Sydney", img: "assets/sydney.jpg" }
-                    ]
-                },
-                "luxury-cars": {
-                    title: "Luxury Car Arranger 🏎️",
-                    puzzles: [
-                        { name: "Lamborghini Huracán", img: "assets/lamborghini.jpg" },
-                        { name: "Rolls-Royce Ghost", img: "assets/rolls-royce.jpg" },
-                        { name: "Bentley Continental GT", img: "assets/bentley.jpg" },
-                        { name: "McLaren 720S", img: "assets/mclaren.jpg" },
-                        { name: "Bugatti Chiron", img: "assets/bugatti.jpg" }
-                    ]
-                }
-            };
-
-            const difficultyLevels = [3, 4, 5, 6, 7]; 
-            
-            let currentCategory = null;
-            let currentPuzzleIndex = 0;
-            let currentCategoryPuzzles = null;
-            let currentLevel = 0;
-            let draggingPiece = null;
-            let currentUser = null;
-            let userGameData = null;
-            let isRegisterMode = false;
-            let dailyPuzzleUsed = false;
-            let loginStreak = 0;
-
-            function showModal(modal) {
-                const allModals = document.querySelectorAll('.modal');
-                allModals.forEach(m => m.style.display = 'none');
-                modal.style.display = 'flex';
-            }
-
-            function updateAuthUI(isLoggedIn, username = null) {
-                if (isLoggedIn) {
-                    showModal(categoryModal);
-                    userInfoElement.textContent = `Logged in as: ${username}`;
-                    logoutButton.classList.remove('hidden');
-                    gameStats.classList.remove('hidden');
-                } else {
-                    showModal(authModal);
-                    userInfoElement.textContent = `Guest`;
-                    logoutButton.classList.add('hidden');
-                    gameStats.classList.add('hidden');
-                }
-            }
-
-            // Listen for auth state changes
-            auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    currentUser = user;
-                    await loadGameData(user.uid);
-                    updateAuthUI(true, userGameData.username);
-                } else {
-                    currentUser = null;
-                    userGameData = null;
-                    updateAuthUI(false);
-                    // Hide main game UI and show auth modal
-                    document.querySelector('main').style.display = 'none';
-                    showModal(authModal);
-                }
-            });
-
-            // Handle Login/Register form submission
-            authForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = authForm.email.value;
-                const password = authForm.password.value;
-                const username = authForm.username.value;
-                authStatus.textContent = '';
-                
-                try {
-                    if (isRegisterMode) {
-                        // Check if username is provided
-                        if (!username) {
-                            authStatus.textContent = 'Error: Username is required for registration.';
-                            return;
+        // Sticker Modal elements
+        const stickerModal = document.getElementById('sticker-modal');
+        const nextFromStickerButton = document.getElementById('next-from-sticker-button');
+        
+        let currentCategory = null;
+        let currentPuzzleIndex = 0;
+        let currentLevel = 0;
+        let draggingPiece = null;
+        let currentUser = null;
+        let userGameData = null;
+        let isRegisterMode = false;
+        let dailyPuzzleUsed = false;
+        let loginStreak = 0;
+        
+        // The difficulty levels now represent the number of rows/columns.
+        // Starting with 2x2 for Level 1, then 3x3 for Level 2, etc.
+        const difficultyLevels = [2, 3, 4, 5, 6];
+        
+        const puzzleSets = {
+            animals: {
+                title: "Animal Arranger 🐾",
+                puzzles: [
+                    { 
+                        name: "Lion", 
+                        img: "https://placehold.co/600x600/1e293b/c7d2fe?text=Lion",
+                        quiz: {
+                            question: "What is a group of lions called?",
+                            options: ["A pride", "A herd", "A pack", "A swarm"],
+                            answer: "A pride"
                         }
-                        await auth.createUserWithEmailAndPassword(email, password);
-                        await initializeUserGameData(auth.currentUser.uid, username);
-                        authStatus.textContent = 'Registration successful! You are now logged in.';
-                    } else {
-                        await auth.signInWithEmailAndPassword(email, password);
-                        authStatus.textContent = 'Login successful!';
+                    },
+                    { 
+                        name: "Elephant", 
+                        img: "https://placehold.co/600x600/1e293b/a3e635?text=Elephant",
+                        quiz: {
+                            question: "Which of these is the largest land animal?",
+                            options: ["White Rhino", "Giraffe", "Elephant", "Hippopotamus"],
+                            answer: "Elephant"
+                        }
+                    },
+                    { 
+                        name: "Panda", 
+                        img: "https://placehold.co/600x600/1e293b/e2e8f0?text=Panda",
+                        quiz: {
+                            question: "What is a panda's primary food source?",
+                            options: ["Bamboo", "Fish", "Eucalyptus leaves", "Grass"],
+                            answer: "Bamboo"
+                        }
+                    },
+                    { 
+                        name: "Rabbit", 
+                        img: "https://placehold.co/600x600/1e293b/fbcfe8?text=Rabbit",
+                        quiz: {
+                            question: "What do you call a baby rabbit?",
+                            options: ["A kitten", "A pup", "A kit", "A joey"],
+                            answer: "A kit"
+                        }
+                    },
+                    { 
+                        name: "Cat", 
+                        img: "https://placehold.co/600x600/1e293b/a5f3fc?text=Cat",
+                        quiz: {
+                            question: "Which of these is NOT a breed of cat?",
+                            options: ["Persian", "Bengal", "Labrador", "Siamese"],
+                            answer: "Labrador"
+                        }
                     }
-                    authForm.reset();
-                } catch (error) {
-                    authStatus.textContent = `Error: ${error.message}`;
-                }
-            });
-            
-            toggleAuthModeButton.addEventListener('click', () => {
-                isRegisterMode = !isRegisterMode;
-                authTitle.textContent = isRegisterMode ? 'Register' : 'Login';
-                authSubmitButton.textContent = isRegisterMode ? 'Register' : 'Login';
-                toggleAuthModeButton.textContent = isRegisterMode ? 'Login instead' : 'Register now';
-                usernameInputGroup.classList.toggle('hidden', !isRegisterMode);
-            });
+                ]
+            },
+            arts: {
+                title: "Art Arranger 🎨",
+                puzzles: [
+                    { 
+                        name: "Mona Lisa", 
+                        img: "https://placehold.co/600x600/1e293b/c084fc?text=Mona+Lisa",
+                        quiz: {
+                            question: "Who painted the Mona Lisa?",
+                            options: ["Pablo Picasso", "Leonardo da Vinci", "Vincent van Gogh", "Michelangelo"],
+                            answer: "Leonardo da Vinci"
+                        }
+                    },
+                    { 
+                        name: "Starry Night", 
+                        img: "https://placehold.co/600x600/1e293b/7dd3fc?text=Starry+Night",
+                        quiz: {
+                            question: "Where did Vincent van Gogh paint 'The Starry Night'?",
+                            options: ["In a field", "In a hospital asylum", "In Paris", "On a boat"],
+                            answer: "In a hospital asylum"
+                        }
+                    },
+                    { 
+                        name: "The Scream", 
+                        img: "https://placehold.co/600x600/1e293b/fca5a5?text=The+Scream",
+                        quiz: {
+                            question: "Who is the artist behind 'The Scream'?",
+                            options: ["Edvard Munch", "Claude Monet", "Salvador Dalí", "Gustav Klimt"],
+                            answer: "Edvard Munch"
+                        }
+                    },
+                    { 
+                        name: "The Thinker", 
+                        img: "https://placehold.co/600x600/1e293b/a78bfa?text=The+Thinker",
+                        quiz: {
+                            question: "What material is 'The Thinker' sculpture most famously made from?",
+                            options: ["Wood", "Marble", "Bronze", "Glass"],
+                            answer: "Bronze"
+                        }
+                    },
+                    { 
+                        name: "Cubism", 
+                        img: "https://placehold.co/600x600/1e293b/bae6fd?text=Cubism",
+                        quiz: {
+                            question: "Which artist is most associated with Cubism?",
+                            options: ["Andy Warhol", "Pablo Picasso", "Frida Kahlo", "Jackson Pollock"],
+                            answer: "Pablo Picasso"
+                        }
+                    }
+                ]
+            },
+            cities: {
+                title: "City Arranger 🏙️",
+                puzzles: [
+                    { 
+                        name: "London", 
+                        img: "https://placehold.co/600x600/1e293b/94a3b8?text=London",
+                        quiz: {
+                            question: "Which famous clock tower is located in London?",
+                            options: ["Big Ben", "The Kremlin", "The Leaning Tower of Pisa", "The Colosseum"],
+                            answer: "Big Ben"
+                        }
+                    },
+                    { 
+                        name: "Paris", 
+                        img: "https://placehold.co/600x600/1e293b/818cf8?text=Paris",
+                        quiz: {
+                            question: "What is Paris's famous landmark?",
+                            options: ["Statue of Liberty", "Eiffel Tower", "Burj Khalifa", "Sydney Opera House"],
+                            answer: "Eiffel Tower"
+                        }
+                    },
+                    { 
+                        name: "Cairo", 
+                        img: "https://placehold.co/600x600/1e293b/bef264?text=Cairo",
+                        quiz: {
+                            question: "What ancient structures are near Cairo, Egypt?",
+                            options: ["Pyramids of Giza", "Machu Picchu", "The Great Wall of China", "Stonehenge"],
+                            answer: "Pyramids of Giza"
+                        }
+                    },
+                    { 
+                        name: "Tokyo", 
+                        img: "https://placehold.co/600x600/1e293b/fca5a5?text=Tokyo",
+                        quiz: {
+                            question: "What is a famous landmark in Tokyo?",
+                            options: ["The Forbidden City", "The Blue Mosque", "Tokyo Tower", "Taj Mahal"],
+                            answer: "Tokyo Tower"
+                        }
+                    },
+                    { 
+                        name: "Sydney", 
+                        img: "https://placehold.co/600x600/1e293b/93c5fd?text=Sydney",
+                        quiz: {
+                            question: "Which famous opera house is in Sydney?",
+                            options: ["Vienna State Opera", "La Scala", "Sydney Opera House", "Royal Opera House"],
+                            answer: "Sydney Opera House"
+                        }
+                    }
+                ]
+            },
+            "luxury-cars": {
+                title: "Luxury Car Arranger 🏎️",
+                puzzles: [
+                    { 
+                        name: "Lamborghini Huracán", 
+                        img: "https://placehold.co/600x600/1e293b/fcd34d?text=Lamborghini",
+                        quiz: {
+                            question: "Which country is Lamborghini from?",
+                            options: ["Germany", "Italy", "United States", "Japan"],
+                            answer: "Italy"
+                        }
+                    },
+                    { 
+                        name: "Rolls-Royce Ghost", 
+                        img: "https://placehold.co/600x600/1e293b/d4d4d4?text=Rolls-Royce",
+                        quiz: {
+                            question: "What is the small statue on the hood of a Rolls-Royce called?",
+                            options: ["The Flying Lady", "The Spirit of Ecstasy", "The Silver Swan", "The Hood Ornament"],
+                            answer: "The Spirit of Ecstasy"
+                        }
+                    },
+                    { 
+                        name: "Bentley Continental GT", 
+                        img: "https://placehold.co/600x600/1e293b/fcd34d?text=Bentley",
+                        quiz: {
+                            question: "What does 'GT' stand for in a car model name?",
+                            options: ["Gasoline Type", "Grand Tourer", "General Transport", "Great Torque"],
+                            answer: "Grand Tourer"
+                        }
+                    },
+                    { 
+                        name: "McLaren 720S", 
+                        img: "https://placehold.co/600x600/1e293b/c7d2fe?text=McLaren",
+                        quiz: {
+                            question: "Which country is the McLaren automotive company from?",
+                            options: ["United States", "Germany", "United Kingdom", "Italy"],
+                            answer: "United Kingdom"
+                        }
+                    },
+                    { 
+                        name: "Bugatti Chiron", 
+                        img: "https://placehold.co/600x600/1e293b/e2e8f0?text=Bugatti",
+                        quiz: {
+                            question: "What record did the Bugatti Chiron set?",
+                            options: ["Fastest 0-60 mph", "Highest top speed", "Shortest braking distance", "Fastest quarter-mile"],
+                            answer: "Highest top speed"
+                        }
+                    }
+                ]
+            }
+        };
 
-            playAsGuestButton.addEventListener('click', () => {
+        // --- Firebase Functions ---
+        const USER_COLLECTION = `artifacts/${appId}/users/`;
+
+        async function loadGameData(uid) {
+            const userDocRef = doc(db, `${USER_COLLECTION}${uid}/game_data/progress`);
+            const docSnap = await getDoc(userDocRef);
+            if (docSnap.exists()) {
+                userGameData = docSnap.data();
+                loginStreak = userGameData.streak || 0;
+                const now = new Date();
+                const lastLogin = userGameData.lastLogin ? userGameData.lastLogin.toDate() : now;
+                const oneDay = 24 * 60 * 60 * 1000;
+                const diffDays = Math.floor((now - lastLogin) / oneDay);
+                if (diffDays === 1) {
+                    loginStreak++;
+                    dailyPuzzleUsed = false;
+                    await updateDoc(userDocRef, {
+                        lastLogin: now,
+                        streak: loginStreak,
+                        dailyPuzzleUsed: dailyPuzzleUsed
+                    });
+                } else if (diffDays > 1) {
+                    loginStreak = 1;
+                    dailyPuzzleUsed = false;
+                    await updateDoc(userDocRef, {
+                        lastLogin: now,
+                        streak: loginStreak,
+                        dailyPuzzleUsed: dailyPuzzleUsed
+                    });
+                }
+            } else {
+                userGameData = {
+                    username: `Guest-${uid.substring(0, 4)}`,
+                    lastLogin: new Date(),
+                    streak: 0,
+                    dailyPuzzleUsed: false,
+                    gameProgress: {}
+                };
+                await setDoc(doc(db, `${USER_COLLECTION}${uid}/game_data/progress`), userGameData);
+            }
+            updateGameStatsUI();
+        }
+
+        async function saveGameData() {
+            if (currentUser) {
+                const userDocRef = doc(db, `${USER_COLLECTION}${currentUser.uid}/game_data/progress`);
+                const progressData = {
+                    currentCategory,
+                    currentPuzzleIndex,
+                    currentLevel
+                };
+                userGameData.gameProgress = progressData;
+                await setDoc(userDocRef, userGameData, { merge: true });
+            }
+        }
+        
+        function updateGameStatsUI() {
+            if (userGameData) {
+                progressText.textContent = `Progress: ${userGameData.gameProgress.currentCategory ? `Playing ${puzzleSets[userGameData.gameProgress.currentCategory].title} - Level ${userGameData.gameProgress.currentLevel + 1}` : 'No active game'}`;
+                streakText.textContent = `Login Streak: ${loginStreak} days 🔥`;
+                dailyPuzzleText.textContent = `Daily Puzzle: ${dailyPuzzleUsed ? 'Completed today' : 'Available!'}`;
+            }
+        }
+
+        function showModal(modal) {
+            const allModals = document.querySelectorAll('.modal');
+            allModals.forEach(m => m.style.display = 'none');
+            modal.style.display = 'flex';
+        }
+
+        function showMessageBox(title, message) {
+            document.getElementById('message-title').textContent = title;
+            document.getElementById('message-text').textContent = message;
+            showModal(document.getElementById('message-box'));
+        }
+
+        document.getElementById('message-ok-button').addEventListener('click', () => {
+            document.getElementById('message-box').style.display = 'none';
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Remove any automatic sign-in attempts on page load
+            showModal(authModal);
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadGameData(user.uid);
+                updateAuthUI(true, userGameData.username);
+            } else {
                 currentUser = null;
                 userGameData = null;
                 updateAuthUI(false, 'Guest');
-                document.querySelector('main').style.display = 'none';
+                document.querySelector('main').classList.add('hidden');
+                showModal(authModal);
+            }
+        });
+
+        function updateAuthUI(isLoggedIn, username) {
+            if (isLoggedIn) {
+                document.querySelector('main').classList.add('hidden');
                 showModal(categoryModal);
-            });
+                userInfoElement.textContent = `Logged in as: ${username}`;
+                logoutButton.classList.remove('hidden');
+                gameStats.classList.remove('hidden');
+            } else {
+                showModal(authModal);
+                userInfoElement.textContent = `Guest`;
+                logoutButton.classList.add('hidden');
+                gameStats.classList.add('hidden');
+            }
+        }
 
-            logoutButton.addEventListener('click', async () => {
-                try {
-                    await auth.signOut();
-                } catch (error) {
-                    console.error("Logout error:", error);
-                }
-            });
-
-            async function initializeUserGameData(uid, username) {
-                const userDocRef = db.collection('users').doc(uid);
-                await userDocRef.set({
-                    username: username,
-                    lastLogin: new Date(),
-                    streak: 1,
-                    dailyPuzzleUsed: false,
-                    gameProgress: {
-                        currentCategory: null,
-                        currentPuzzleIndex: 0,
-                        currentLevel: 0
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = authForm.email.value;
+            const password = authForm.password.value;
+            const username = authForm.username.value;
+            authStatus.textContent = '';
+            try {
+                if (isRegisterMode) {
+                    if (!username) {
+                        authStatus.textContent = 'Error: Username is required for registration.';
+                        return;
                     }
-                });
-            }
-
-            async function loadGameData(uid) {
-                const userDocRef = db.collection('users').doc(uid);
-                const doc = await userDocRef.get();
-                if (doc.exists) {
-                    userGameData = doc.data();
-                    loginStreak = userGameData.streak || 0;
-                    dailyPuzzleUsed = userGameData.dailyPuzzleUsed || false;
-                    
-                    const now = new Date();
-                    const lastLogin = userGameData.lastLogin ? userGameData.lastLogin.toDate() : now;
-                    
-                    const oneDay = 24 * 60 * 60 * 1000;
-                    const diffDays = Math.floor((now - lastLogin) / oneDay);
-                    
-                    if (diffDays === 1) {
-                        loginStreak++;
-                        dailyPuzzleUsed = false;
-                        await userDocRef.update({
-                            lastLogin: now,
-                            streak: loginStreak,
-                            dailyPuzzleUsed: dailyPuzzleUsed
-                        });
-                    } else if (diffDays > 1) {
-                        loginStreak = 1;
-                        dailyPuzzleUsed = false;
-                        await userDocRef.update({
-                            lastLogin: now,
-                            streak: loginStreak,
-                            dailyPuzzleUsed: dailyPuzzleUsed
-                        });
-                    }
-                    
-                    updateGameStatsUI();
-                    
-                } else {
-                    // User data doesn't exist, this should only happen for new users, so we can't load data.
-                    // This case is handled in the registration process.
-                    userGameData = {};
-                    updateGameStatsUI();
-                }
-            }
-
-            function updateGameStatsUI() {
-                if (userGameData) {
-                    progressText.textContent = `Progress: ${userGameData.gameProgress.currentCategory ? `Playing ${puzzleSets[userGameData.gameProgress.currentCategory].title} - Level ${userGameData.gameProgress.currentLevel + 1}` : 'No active game'}`;
-                    streakText.textContent = `Login Streak: ${loginStreak} days 🔥`;
-                    dailyPuzzleText.textContent = `Daily Puzzle: ${dailyPuzzleUsed ? 'Completed today' : 'Available!'}`;
-                }
-            }
-
-            async function saveGameData() {
-                if (currentUser) {
-                    const userDocRef = db.collection('users').doc(currentUser.uid);
-                    await userDocRef.update({
-                        gameProgress: {
-                            currentCategory,
-                            currentPuzzleIndex,
-                            currentLevel
-                        }
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, `${USER_COLLECTION}${userCredential.user.uid}/game_data/progress`), {
+                        username: username,
+                        lastLogin: new Date(),
+                        streak: 1,
+                        dailyPuzzleUsed: false,
+                        gameProgress: {}
                     });
-                }
-            }
-            
-            function initializeGame(category, puzzleIndex, level) {
-                puzzleBoard.innerHTML = '';
-                piecesContainer.innerHTML = '';
-                statusMessage.textContent = ``;
-
-                currentCategory = category;
-                currentPuzzleIndex = puzzleIndex;
-                currentLevel = level;
-                currentCategoryPuzzles = puzzleSets[category].puzzles;
-                
-                document.querySelector('main').style.display = 'flex';
-                showModal(document.querySelector('main'));
-
-                const cols = difficultyLevels[level];
-                const rows = difficultyLevels[level];
-                const totalPieces = rows * cols;
-                
-                puzzleBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-                piecesContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-                puzzleBoard.style.gap = `${2 / (level + 1)}vmin`;
-                piecesContainer.style.gap = `${2 / (level + 1)}vmin`;
-
-                const currentPuzzle = currentCategoryPuzzles[puzzleIndex];
-                
-                mainTitle.innerHTML = `
-                    The Arranger Game: ${puzzleSets[category].title}
-                `;
-                gameProgress.textContent = `Puzzle ${puzzleIndex + 1} of ${currentCategoryPuzzles.length} | Level ${level + 1} of ${difficultyLevels.length}`;
-
-                const pieces = [];
-                for (let i = 0; i < totalPieces; i++) {
-                    const row = Math.floor(i / cols);
-                    const col = i % cols;
-                    
-                    const piece = document.createElement('div');
-                    piece.classList.add('puzzle-piece', 'bg-white', 'rounded-lg', 'shadow-md', 'border-2', 'border-gray-300', 'aspect-square');
-                    piece.setAttribute('draggable', 'true');
-                    piece.dataset.id = i;
-                    
-                    piece.style.backgroundImage = `url('${currentPuzzle.img}')`;
-                    piece.style.backgroundSize = `${cols * 100}% ${rows * 100}%`;
-                    piece.style.backgroundPosition = `calc(${100 / (cols - 1)}% * ${col}) calc(${100 / (rows - 1)}% * ${row})`;
-
-                    pieces.push(piece);
-                }
-
-                for (let i = 0; i < totalPieces; i++) {
-                    const dropZone = document.createElement('div');
-                    dropZone.classList.add('w-full', 'h-full', 'drop-zone');
-                    dropZone.dataset.id = i;
-                    puzzleBoard.appendChild(dropZone);
-                }
-                
-                puzzleBoard.appendChild(hintOverlay);
-
-                const shuffledPieces = [...pieces].sort(() => Math.random() - 0.5);
-                shuffledPieces.forEach(piece => {
-                    piecesContainer.appendChild(piece);
-                });
-
-                resetButton.textContent = "Reset Puzzle";
-            }
-
-            // --- Drag and Drop Event Listeners ---
-            piecesContainer.addEventListener('dragstart', (e) => {
-                const target = e.target.closest('.puzzle-piece');
-                if (target) {
-                    draggingPiece = target;
-                    target.classList.add('dragging');
-                    e.dataTransfer.setData('text/plain', target.dataset.id);
-                }
-            });
-
-            piecesContainer.addEventListener('dragend', (e) => {
-                const target = e.target.closest('.puzzle-piece');
-                if (target) {
-                    target.classList.remove('dragging');
-                    draggingPiece = null;
-                }
-            });
-            
-            puzzleBoard.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                const dropZone = e.target.closest('.drop-zone');
-                if (dropZone && !dropZone.hasChildNodes()) {
-                    dropZone.classList.add('bg-indigo-200');
-                }
-            });
-            
-            puzzleBoard.addEventListener('dragleave', (e) => {
-                const dropZone = e.target.closest('.drop-zone');
-                if (dropZone) {
-                    dropZone.classList.remove('bg-indigo-200');
-                }
-            });
-
-            puzzleBoard.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const dropZone = e.target.closest('.drop-zone');
-                const pieceId = e.dataTransfer.getData('text/plain');
-                const piece = document.querySelector(`.puzzle-piece[data-id="${pieceId}"]`);
-                
-                if (dropZone && !dropZone.hasChildNodes() && piece) {
-                    dropZone.classList.remove('bg-indigo-200');
-                    dropZone.appendChild(piece);
-                    checkWin();
-                }
-            });
-
-            // --- Win Condition Check ---
-            function checkWin() {
-                const dropZones = Array.from(puzzleBoard.children).filter(el => el.classList.contains('drop-zone'));
-                const solved = dropZones.every(zone => {
-                    const piece = zone.firstElementChild;
-                    return piece && parseInt(piece.dataset.id) === parseInt(zone.dataset.id);
-                });
-
-                if (solved) {
-                    const currentPuzzleName = currentCategoryPuzzles[currentPuzzleIndex].name;
-                    statusMessage.textContent = `✅ Correct! You solved: ${currentPuzzleName}`;
-                    statusMessage.classList.remove('text-gray-400');
-                    statusMessage.classList.add('text-green-400', 'animate-pulse');
-                    saveGameData();
-
-                    setTimeout(() => {
-                        if (currentPuzzleIndex < currentCategoryPuzzles.length - 1) {
-                            currentPuzzleIndex++;
-                            initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
-                        } else if (currentLevel < difficultyLevels.length - 1) {
-                            currentLevel++;
-                            currentPuzzleIndex = 0;
-                            statusMessage.textContent = `Level ${currentLevel + 1} Unlocked! All puzzles complete for this level.`;
-                            initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
-                        } else {
-                            endGame();
-                        }
-                        statusMessage.classList.remove('text-green-400', 'animate-pulse');
-                        statusMessage.classList.add('text-gray-400');
-                    }, 2000);
-                }
-            }
-            
-            // --- Educational Purpose Function ---
-            function displayEducationalPurpose() {
-                const purposeText = `
-                    <h2 class="text-3xl font-bold mb-4 text-indigo-400">Why Puzzles? 🧠</h2>
-                    <p class="text-lg text-gray-400 mb-6">
-                        Jigsaw puzzles are a fantastic way to improve **spatial reasoning**, **problem-solving**, and **short-term memory**. By matching pieces and visualizing the final image, you're giving your brain a great workout!
-                    </p>
-                    <button id="close-educational-modal" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
-                        Awesome!
-                    </button>
-                `;
-                const modal = document.createElement('div');
-                modal.classList.add('modal', 'fixed', 'inset-0', 'z-50', 'flex', 'items-center', 'justify-center', 'modal-overlay');
-                modal.innerHTML = `<div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">${purposeText}</div>`;
-                document.body.appendChild(modal);
-                modal.style.display = 'flex';
-
-                document.getElementById('close-educational-modal').addEventListener('click', () => {
-                    modal.style.display = 'none';
-                    modal.remove();
-                });
-            }
-
-            function endGame() {
-                puzzleBoard.innerHTML = '';
-                piecesContainer.innerHTML = '';
-                mainTitle.innerHTML = `
-                    <h1 class="text-4xl font-extrabold text-white tracking-tight text-center">Congratulations! 🎉</h1>
-                `;
-                gameProgress.textContent = "You've successfully completed all puzzles in this category!";
-                statusMessage.textContent = "You are a master Arranger!";
-                statusMessage.classList.add('text-blue-400', 'animate-pulse');
-                resetButton.textContent = "Play Again?";
-                showHintButton.style.display = 'none';
-                
-                setTimeout(displayEducationalPurpose, 1500);
-            }
-
-            // --- Button Event Listeners ---
-            resetButton.addEventListener('click', () => {
-                if (resetButton.textContent === "Play Again?") {
-                    showModal(categoryModal);
+                    authStatus.textContent = 'Registration successful!';
                 } else {
-                    initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                    await signInWithEmailAndPassword(auth, email, password);
+                    authStatus.textContent = 'Login successful!';
                 }
-                statusMessage.classList.remove('text-blue-400', 'text-green-400', 'animate-pulse', 'text-yellow-400');
-                statusMessage.classList.add('text-gray-400');
-                statusMessage.textContent = "Puzzle reset.";
+                authForm.reset();
+            } catch (error) {
+                authStatus.textContent = `Error: ${error.message}`;
+            }
+        });
+        
+        toggleAuthModeButton.addEventListener('click', () => {
+            isRegisterMode = !isRegisterMode;
+            authTitle.textContent = isRegisterMode ? 'Register' : 'Login';
+            authSubmitButton.textContent = isRegisterMode ? 'Register' : 'Login';
+            toggleAuthModeButton.textContent = isRegisterMode ? 'Login instead' : 'Register now';
+            usernameInputGroup.classList.toggle('hidden', !isRegisterMode);
+        });
+
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Logout error:", error);
+            }
+        });
+        
+        function initializeGame(category, puzzleIndex, level) {
+            puzzleBoard.innerHTML = '';
+            piecesContainer.innerHTML = '';
+            statusMessage.textContent = ``;
+
+            currentCategory = category;
+            currentPuzzleIndex = puzzleIndex;
+            currentLevel = level;
+            const currentCategoryPuzzles = puzzleSets[category].puzzles;
+            
+            document.querySelector('main').classList.remove('hidden');
+            showModal(document.querySelector('main'));
+
+            const cols = difficultyLevels[level];
+            const rows = difficultyLevels[level];
+            const totalPieces = rows * cols;
+            
+            puzzleBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            piecesContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            puzzleBoard.style.gap = `${2 / (level + 1)}vmin`;
+            piecesContainer.style.gap = `${2 / (level + 1)}vmin`;
+
+            const currentPuzzle = currentCategoryPuzzles[puzzleIndex];
+            
+            mainTitle.innerHTML = `The Arranger Game: ${puzzleSets[category].title}`;
+            gameProgress.textContent = `Level ${level + 1} (${cols}x${rows}) | Puzzle ${puzzleIndex + 1} of ${currentCategoryPuzzles.length}`;
+
+            const pieces = [];
+            for (let i = 0; i < totalPieces; i++) {
+                const row = Math.floor(i / cols);
+                const col = i % cols;
+                
+                const piece = document.createElement('div');
+                piece.classList.add('puzzle-piece', 'bg-white', 'rounded-lg', 'shadow-md', 'border-2', 'border-gray-300', 'aspect-square');
+                piece.setAttribute('draggable', 'true');
+                piece.dataset.id = i;
+                
+                piece.style.backgroundImage = `url('${currentPuzzle.img}')`;
+                piece.style.backgroundSize = `${cols * 100}% ${rows * 100}%`;
+                piece.style.backgroundPosition = `calc(${100 / (cols - 1)}% * ${col}) calc(${100 / (rows - 1)}% * ${row})`;
+
+                pieces.push(piece);
+            }
+
+            for (let i = 0; i < totalPieces; i++) {
+                const dropZone = document.createElement('div');
+                dropZone.classList.add('w-full', 'h-full', 'drop-zone');
+                dropZone.dataset.id = i;
+                puzzleBoard.appendChild(dropZone);
+            }
+            
+            puzzleBoard.appendChild(hintOverlay);
+
+            const shuffledPieces = [...pieces].sort(() => Math.random() - 0.5);
+            shuffledPieces.forEach(piece => {
+                piecesContainer.appendChild(piece);
             });
 
-            showHintButton.addEventListener('click', () => {
-                const currentPuzzle = currentCategoryPuzzles[currentPuzzleIndex];
-                let hintContent = `<div class="w-full h-full p-2 flex items-center justify-center"><img src="${currentPuzzle.img}" class="w-full h-auto" alt="${currentPuzzle.name}" /></div>`;
-                
-                hintOverlay.innerHTML = hintContent;
-                hintOverlay.classList.add('show');
-                
-                statusMessage.textContent = "Hint used! See the solved image.";
-                statusMessage.classList.add('text-yellow-400');
+            resetButton.textContent = "Reset Puzzle";
+        }
+
+        piecesContainer.addEventListener('dragstart', (e) => {
+            const target = e.target.closest('.puzzle-piece');
+            if (target) {
+                draggingPiece = target;
+                target.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', target.dataset.id);
+            }
+        });
+
+        piecesContainer.addEventListener('dragend', (e) => {
+            const target = e.target.closest('.puzzle-piece');
+            if (target) {
+                target.classList.remove('dragging');
+                draggingPiece = null;
+            }
+        });
+        
+        puzzleBoard.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const dropZone = e.target.closest('.drop-zone');
+            if (dropZone && !dropZone.hasChildNodes()) {
+                dropZone.classList.add('bg-indigo-200');
+            }
+        });
+        
+        puzzleBoard.addEventListener('dragleave', (e) => {
+            const dropZone = e.target.closest('.drop-zone');
+            if (dropZone) {
+                dropZone.classList.remove('bg-indigo-200');
+            }
+        });
+
+        puzzleBoard.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const dropZone = e.target.closest('.drop-zone');
+            const pieceId = e.dataTransfer.getData('text/plain');
+            const piece = document.querySelector(`.puzzle-piece[data-id="${pieceId}"]`);
+            
+            if (dropZone && !dropZone.hasChildNodes() && piece) {
+                dropZone.classList.remove('bg-indigo-200');
+                dropZone.appendChild(piece);
+                checkWin();
+            }
+        });
+
+        function checkWin() {
+            const dropZones = Array.from(puzzleBoard.children).filter(el => el.classList.contains('drop-zone'));
+            const solved = dropZones.every(zone => {
+                const piece = zone.firstElementChild;
+                return piece && parseInt(piece.dataset.id) === parseInt(zone.dataset.id);
+            });
+
+            if (solved) {
+                const currentPuzzle = puzzleSets[currentCategory].puzzles[currentPuzzleIndex];
+                statusMessage.textContent = `✅ Correct! You solved: ${currentPuzzle.name} 🎉`;
+                statusMessage.classList.remove('text-gray-400');
+                statusMessage.classList.add('text-green-400', 'animate-pulse');
+                saveGameData();
 
                 setTimeout(() => {
-                    hintOverlay.classList.remove('show');
-                    statusMessage.textContent = "";
-                    statusMessage.classList.remove('text-yellow-400');
-                }, 2000);
+                    statusMessage.classList.remove('text-green-400', 'animate-pulse');
+                    statusMessage.classList.add('text-gray-400');
+                    showQuizModal(currentPuzzle.quiz);
+                }, 1500);
+            }
+        }
+
+        function showQuizModal(quiz) {
+            quizQuestionElement.textContent = quiz.question;
+            quizOptionsElement.innerHTML = '';
+            quizFeedbackElement.textContent = '';
+            nextFromQuizButton.classList.add('hidden');
+
+            quiz.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('quiz-option', 'px-6', 'py-3', 'bg-gray-700', 'text-white', 'font-bold', 'rounded-full', 'hover:bg-gray-600', 'transition-colors');
+                quizOptionsElement.appendChild(button);
+                button.addEventListener('click', () => handleQuizAnswer(option, quiz.answer));
             });
+
+            showModal(quizModal);
+        }
+
+        function handleQuizAnswer(selectedOption, correctAnswer) {
+            const buttons = quizOptionsElement.querySelectorAll('button');
+            buttons.forEach(button => button.disabled = true);
+
+            if (selectedOption === correctAnswer) {
+                quizFeedbackElement.textContent = "Correct! Great job!";
+                quizFeedbackElement.classList.remove('text-red-400');
+                quizFeedbackElement.classList.add('text-green-400');
+            } else {
+                quizFeedbackElement.textContent = `Incorrect. The correct answer was "${correctAnswer}".`;
+                quizFeedbackElement.classList.remove('text-green-400');
+                quizFeedbackElement.classList.add('text-red-400');
+            }
+            nextFromQuizButton.classList.remove('hidden');
+        }
+
+        nextFromQuizButton.addEventListener('click', () => {
+            quizModal.style.display = 'none';
+            // Logic to move to the next puzzle or level
+            if (currentPuzzleIndex < puzzleSets[currentCategory].puzzles.length - 1) {
+                currentPuzzleIndex++;
+                initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                statusMessage.textContent = "";
+            } else {
+                // All puzzles in the current level are complete
+                if (currentLevel < difficultyLevels.length - 1) {
+                    showStickerModal();
+                } else {
+                    endGame();
+                }
+            }
+        });
+
+        function showStickerModal() {
+            showModal(stickerModal);
+        }
+
+        nextFromStickerButton.addEventListener('click', () => {
+            stickerModal.style.display = 'none';
+            currentLevel++;
+            currentPuzzleIndex = 0;
+            initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+        });
+
+        function endGame() {
+            puzzleBoard.innerHTML = '';
+            piecesContainer.innerHTML = '';
+            mainTitle.innerHTML = `<h1 class="text-4xl font-extrabold text-white tracking-tight text-center">Congratulations! 🎉</h1>`;
+            gameProgress.textContent = "You've successfully completed all puzzles in this category!";
+            statusMessage.textContent = "You are a master Arranger!";
+            statusMessage.classList.add('text-blue-400', 'animate-pulse');
+            resetButton.textContent = "Play Again?";
+            showHintButton.classList.add('hidden');
+            nextButton.classList.add('hidden');
+        }
+
+        resetButton.addEventListener('click', () => {
+            if (resetButton.textContent === "Play Again?") {
+                showModal(categoryModal);
+            } else {
+                initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+            }
+            statusMessage.classList.remove('text-blue-400', 'text-green-400', 'animate-pulse', 'text-yellow-400');
+            statusMessage.classList.add('text-gray-400');
+            statusMessage.textContent = "Puzzle reset.";
+        });
+
+        showHintButton.addEventListener('click', () => {
+            const currentPuzzle = puzzleSets[currentCategory].puzzles[currentPuzzleIndex];
+            let hintContent = `<div class="w-full h-full p-2 flex items-center justify-center"><img src="${currentPuzzle.img}" class="w-full h-auto rounded-lg shadow-xl" alt="${currentPuzzle.name}" /></div>`;
             
-            nextButton.addEventListener('click', () => {
-                if (currentPuzzleIndex < currentCategoryPuzzles.length - 1) {
-                    currentPuzzleIndex++;
-                    initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
-                    statusMessage.textContent = "";
+            hintOverlay.innerHTML = hintContent;
+            hintOverlay.classList.add('show');
+            
+            statusMessage.textContent = "Hint used! See the solved image.";
+            statusMessage.classList.add('text-yellow-400');
+
+            setTimeout(() => {
+                hintOverlay.classList.remove('show');
+                statusMessage.textContent = "";
+                statusMessage.classList.remove('text-yellow-400');
+            }, 2000);
+        });
+        
+        nextButton.addEventListener('click', () => {
+            if (currentPuzzleIndex < puzzleSets[currentCategory].puzzles.length - 1) {
+                currentPuzzleIndex++;
+                initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                statusMessage.textContent = "";
+            } else {
+                // Loop back to start of current level puzzles
+                currentPuzzleIndex = 0;
+                initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                statusMessage.textContent = `Looping back to the start of Level ${currentLevel + 1}!`;
+            }
+        });
+
+        exitButton.addEventListener('click', () => {
+            if (currentUser) {
+                saveGameData();
+            }
+            showModal(categoryModal);
+            document.querySelector('main').classList.add('hidden');
+            currentPuzzleIndex = 0;
+            currentLevel = 0;
+            showHintButton.classList.remove('hidden');
+            nextButton.classList.remove('hidden');
+        });
+        
+        exitGameButton.addEventListener('click', () => {
+            if (currentUser) {
+                saveGameData();
+            }
+            // This is the custom message box that replaces the native window.close() call
+            showMessageBox("Exit Game", "Thank you for playing!");
+        });
+        
+        // Renamed 'showAboutButton' event listener to 'howToPlayButton'
+        howToPlayButton.addEventListener('click', () => {
+            showModal(aboutModal);
+        });
+        
+        // Renamed 'closeAboutButton' event listener to 'closeHowToPlayButton'
+        // and updated the button id in HTML
+        closeAboutButton.addEventListener('click', () => {
+            showModal(categoryModal);
+        });
+        
+        categoryButtons.addEventListener('click', (e) => {
+            const category = e.target.closest('button')?.dataset.category;
+            if (category) {
+                const savedProgress = userGameData?.gameProgress;
+                if (savedProgress && savedProgress.currentCategory === category && currentUser) {
+                    currentPuzzleIndex = savedProgress.currentPuzzleIndex;
+                    currentLevel = savedProgress.currentLevel;
                 } else {
                     currentPuzzleIndex = 0;
-                    initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
-                    statusMessage.textContent = `Looping back to the start of Level ${currentLevel + 1}!`;
+                    currentLevel = 0;
                 }
-            });
-
-            exitButton.addEventListener('click', () => {
-                showModal(categoryModal);
-                mainTitle.innerHTML = ``;
-                gameProgress.textContent = ``;
-                statusMessage.textContent = "";
-                
-                // Save progress before exiting
-                if (currentUser) {
-                    saveGameData();
-                }
-
-                currentPuzzleIndex = 0;
-                currentLevel = 0;
-            });
-            
-            exitGameButton.addEventListener('click', () => {
-                if (currentUser) {
-                    saveGameData();
-                }
-                window.close(); // Closes the current browser window/tab
-            });
-
-            howToPlayButton.addEventListener('click', () => {
-                showModal(howToPlayModal);
-            });
-            
-            closeInstructionsButton.addEventListener('click', () => {
-                if (currentCategory) {
-                    // Return to the current game if one is active
-                    showModal(document.querySelector('main'));
-                } else {
-                    // Otherwise, go back to the category selection
-                    showModal(categoryModal);
-                }
-            });
-            
-            showAboutButton.addEventListener('click', () => {
-                showModal(aboutModal);
-            });
-            
-            closeAboutButton.addEventListener('click', () => {
-                showModal(categoryModal);
-            });
-            
-            categoryButtons.addEventListener('click', (e) => {
-                const category = e.target.closest('button')?.dataset.category;
-                if (category) {
-                    const savedProgress = userGameData?.gameProgress;
-                    if (savedProgress && savedProgress.currentCategory === category && currentUser) {
-                        // Load saved game progress
-                        currentPuzzleIndex = savedProgress.currentPuzzleIndex;
-                        currentLevel = savedProgress.currentLevel;
-                    } else {
-                        // Start a new game for this category
-                        currentPuzzleIndex = 0;
-                        currentLevel = 0;
-                    }
-                    initializeGame(category, currentPuzzleIndex, currentLevel);
-                    showHintButton.style.display = 'inline-block';
-                }
-            });
-
-            // Initially, show the auth modal
-            showModal(authModal);
+                initializeGame(category, currentPuzzleIndex, currentLevel);
+                showHintButton.classList.remove('hidden');
+                nextButton.classList.remove('hidden');
+            }
         });
     </script>
 </body>
