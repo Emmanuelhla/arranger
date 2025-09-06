@@ -64,6 +64,20 @@
         .hidden {
             display: none;
         }
+        .emoji {
+            font-size: 8rem; /* Large emoji size */
+            animation: pop-in 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        @keyframes pop-in {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -170,6 +184,29 @@
             </button>
         </div>
     </div>
+    
+    <div id="quiz-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-xl w-full text-center border border-gray-700">
+            <h2 class="text-3xl font-bold mb-4 text-indigo-400">Quick Quiz!</h2>
+            <div id="quiz-question" class="text-lg text-gray-400 mb-6"></div>
+            <div id="quiz-options" class="grid grid-cols-1 gap-4"></div>
+            <div id="quiz-feedback" class="mt-4 font-bold text-lg"></div>
+            <button id="next-puzzle-quiz-button" class="hidden mt-6 px-8 py-3 bg-emerald-600 text-white font-bold rounded-full shadow-lg hover:bg-emerald-700 transition-colors duration-300">
+                Continue to Next Puzzle
+            </button>
+        </div>
+    </div>
+
+    <div id="sticker-modal" class="modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="modal-content bg-slate-800 p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-gray-700 flex flex-col items-center">
+            <h2 class="text-3xl font-bold mb-4 text-yellow-400">Emoji Unlocked! 🎉</h2>
+            <p class="text-lg text-gray-400 mb-6">You've earned a new emoji for your collection!</p>
+            <div id="sticker-emoji-display" class="emoji"></div>
+            <button id="close-sticker-modal" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
+                Awesome!
+            </button>
+        </div>
+    </div>
 
     <main class="w-full max-w-4xl p-6 bg-slate-800 shadow-xl rounded-2xl flex flex-col items-center gap-6 border border-gray-700 hidden">
 
@@ -193,7 +230,7 @@
             <button id="reset-button" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
                 Reset Puzzle
             </button>
-            <button id="next-button" class="px-6 py-2 bg-emerald-500 text-white font-bold rounded-full shadow-lg hover:bg-emerald-600 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50">
+            <button id="next-button" class="px-6 py-2 bg-emerald-500 text-white font-bold rounded-full shadow-lg hover:bg-emerald-600 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50 hidden">
                 Next Puzzle
             </button>
             <button id="exit-button" class="px-6 py-2 bg-red-600 text-white font-bold rounded-full shadow-lg hover:bg-red-700 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-50">
@@ -253,6 +290,18 @@
             const hintOverlay = document.getElementById('hint-overlay');
             const mainTitle = document.getElementById('main-title');
 
+            // Quiz Modal elements
+            const quizModal = document.getElementById('quiz-modal');
+            const quizQuestion = document.getElementById('quiz-question');
+            const quizOptions = document.getElementById('quiz-options');
+            const quizFeedback = document.getElementById('quiz-feedback');
+            const nextPuzzleQuizButton = document.getElementById('next-puzzle-quiz-button');
+            
+            // Sticker Modal elements
+            const stickerModal = document.getElementById('sticker-modal');
+            const stickerEmojiDisplay = document.getElementById('sticker-emoji-display');
+            const closeStickerModal = document.getElementById('close-sticker-modal');
+
             // Auth Modal elements
             const authModal = document.getElementById('auth-modal');
             const authForm = document.getElementById('auth-form');
@@ -276,50 +325,191 @@
                 animals: {
                     title: "Animal Arranger 🐾",
                     puzzles: [
-                        { name: "Lion", img: "assets/lion.jpg" },
-                        { name: "Elephant", img: "assets/elephant.jpg" },
-                        { name: "Panda", img: "assets/panda.jpg" },
-                        { name: "Rabbit", img: "assets/rabbit.jpg" },
-                        { name: "Cat", img: "assets/cat.jpg" }
+                        { 
+                            name: "Lion", img: "assets/lion.jpg",
+                            quiz: {
+                                question: "What is a group of lions called?",
+                                options: ["A pride", "A herd", "A pack", "A school"],
+                                answer: "A pride"
+                            }
+                        },
+                        { 
+                            name: "Elephant", img: "assets/elephant.jpg",
+                            quiz: {
+                                question: "What is the collective noun for a group of elephants?",
+                                options: ["A herd", "A parliament", "A drove", "A pod"],
+                                answer: "A herd"
+                            }
+                        },
+                        { 
+                            name: "Panda", img: "assets/panda.jpg",
+                            quiz: {
+                                question: "Besides bamboo, what other food source can pandas eat?",
+                                options: ["Meat", "Fruits and vegetables", "Honey", "Fish"],
+                                answer: "Meat"
+                            }
+                        },
+                        { 
+                            name: "Rabbit", img: "assets/rabbit.jpg",
+                            quiz: {
+                                question: "What's the name of a baby rabbit?",
+                                options: ["Cub", "Kitten", "Pup", "Kid"],
+                                answer: "Kitten"
+                            }
+                        },
+                        { 
+                            name: "Cat", img: "assets/cat.jpg",
+                            quiz: {
+                                question: "How many lives is a cat said to have in many cultures?",
+                                options: ["Three", "Seven", "Nine", "Eleven"],
+                                answer: "Nine"
+                            }
+                        }
                     ]
                 },
                 arts: {
                     title: "Art Arranger 🎨",
                     puzzles: [
-                        { name: "Mona Lisa", img: "assets/mona-lisa.jpg" },
-                        { name: "Starry Night", img: "assets/starry-night.jpg" },
-                        { name: "The Scream", img: "assets/the-scream.jpg" },
-                        { name: "The Thinker", img: "assets/the-thinker.jpg" },
-                        { name: "Cubism", img: "assets/cubism.jpg" }
+                        { 
+                            name: "Mona Lisa", img: "assets/mona-lisa.jpg",
+                            quiz: {
+                                question: "Who painted the Mona Lisa?",
+                                options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
+                                answer: "Leonardo da Vinci"
+                            }
+                        },
+                        { 
+                            name: "Starry Night", img: "assets/starry-night.jpg",
+                            quiz: {
+                                question: "Which mental institution was Vincent van Gogh in when he painted 'The Starry Night'?",
+                                options: ["Bethlem Royal Hospital", "Saint-Paul-de-Mausole", "Hôtel-Dieu de Paris", "Hospital de la Santa Creu i Sant Pau"],
+                                answer: "Saint-Paul-de-Mausole"
+                            }
+                        },
+                        { 
+                            name: "The Scream", img: "assets/the-scream.jpg",
+                            quiz: {
+                                question: "The red sky in 'The Scream' is believed to be inspired by what natural phenomenon?",
+                                options: ["A sunset over a fjord", "An aurora borealis", "A volcanic eruption", "A wildfire"],
+                                answer: "A volcanic eruption"
+                            }
+                        },
+                        { 
+                            name: "The Thinker", img: "assets/the-thinker.jpg",
+                            quiz: {
+                                question: "Who created 'The Thinker' sculpture?",
+                                options: ["Auguste Rodin", "Donatello", "Leonardo da Vinci", "Michelangelo"],
+                                answer: "Auguste Rodin"
+                            }
+                        },
+                        { 
+                            name: "Cubism", img: "assets/cubism.jpg",
+                            quiz: {
+                                question: "Cubism is an early 20th-century art movement pioneered by which artist?",
+                                options: ["Salvador Dalí", "Pablo Picasso", "Andy Warhol", "Claude Monet"],
+                                answer: "Pablo Picasso"
+                            }
+                        }
                     ]
                 },
                 cities: {
                     title: "City Arranger 🏙️",
                     puzzles: [
-                        { name: "London", img: "assets/london.jpg" },
-                        { name: "Paris", img: "assets/paris.jpg" },
-                        { name: "Cairo", img: "assets/cairo.jpg" },
-                        { name: "Tokyo", img: "assets/tokyo.jpg" },
-                        { name: "Sydney", img: "assets/sydney.jpg" }
+                        { 
+                            name: "London", img: "assets/london.jpg",
+                            quiz: {
+                                question: "The London Underground is more commonly known as...?",
+                                options: ["The Subway", "The Tube", "The Metro", "The Train"],
+                                answer: "The Tube"
+                            }
+                        },
+                        { 
+                            name: "Paris", img: "assets/paris.jpg",
+                            quiz: {
+                                question: "What is the name of the river that flows through Paris, France?",
+                                options: ["Rhine", "Thames", "Seine", "Loire"],
+                                answer: "Seine"
+                            }
+                        },
+                        { 
+                            name: "Cairo", img: "assets/cairo.jpg",
+                            quiz: {
+                                question: "Which ancient wonder is located near Cairo?",
+                                options: ["Hanging Gardens of Babylon", "Statue of Zeus", "Great Pyramid of Giza", "Colossus of Rhodes"],
+                                answer: "Great Pyramid of Giza"
+                            }
+                        },
+                        { 
+                            name: "Tokyo", img: "assets/tokyo.jpg",
+                            quiz: {
+                                question: "Which district in Tokyo is famous for its large pedestrian crossing, known as the 'scramble'?",
+                                options: ["Harajuku", "Shinjuku", "Shibuya", "Akihabara"],
+                                answer: "Shibuya"
+                            }
+                        },
+                        { 
+                            name: "Sydney", img: "assets/sydney.jpg",
+                            quiz: {
+                                question: "Sydney is the capital of which country?",
+                                options: ["New Zealand", "Australia", "Canada", "Sydney is not a capital city"],
+                                answer: "Sydney is not a capital city"
+                            }
+                        }
                     ]
                 },
                 "luxury-cars": {
                     title: "Luxury Car Arranger 🏎️",
                     puzzles: [
-                        { name: "Lamborghini Huracán", img: "assets/lamborghini.jpg" },
-                        { name: "Rolls-Royce Ghost", img: "assets/rolls-royce.jpg" },
-                        { name: "Bentley Continental GT", img: "assets/bentley.jpg" },
-                        { name: "McLaren 720S", img: "assets/mclaren.jpg" },
-                        { name: "Bugatti Chiron", img: "assets/bugatti.jpg" }
+                        { 
+                            name: "Lamborghini Huracán", img: "assets/lamborghini.jpg",
+                            quiz: {
+                                question: "Which country is the Lamborghini brand from?",
+                                options: ["Germany", "Italy", "USA", "Japan"],
+                                answer: "Italy"
+                            }
+                        },
+                        { 
+                            name: "Rolls-Royce Ghost", img: "assets/rolls-royce.jpg",
+                            quiz: {
+                                question: "What is the famous hood ornament of a Rolls-Royce called?",
+                                options: ["Spirit of Ecstasy", "Flying Lady", "Silver Goddess", "Golden Angel"],
+                                answer: "Spirit of Ecstasy"
+                            }
+                        },
+                        { 
+                            name: "Bentley Continental GT", img: "assets/bentley.jpg",
+                            quiz: {
+                                question: "Bentley is a subsidiary of which major automotive group?",
+                                options: ["BMW Group", "Volkswagen Group", "Ford Motor Company", "Stellantis"],
+                                answer: "Volkswagen Group"
+                            }
+                        },
+                        { 
+                            name: "McLaren 720S", img: "assets/mclaren.jpg",
+                            quiz: {
+                                question: "The McLaren F1 once held the record for the fastest production car. What was its top speed?",
+                                options: ["210 mph", "231 mph", "240 mph", "255 mph"],
+                                answer: "240 mph"
+                            }
+                        },
+                        { 
+                            name: "Bugatti Chiron", img: "assets/bugatti.jpg",
+                            quiz: {
+                                question: "What is the horsepower of the Bugatti Chiron's W16 engine?",
+                                options: ["1001 hp", "1200 hp", "1500 hp", "1600 hp"],
+                                answer: "1500 hp"
+                            }
+                        }
                     ]
                 }
             };
 
-            const difficultyLevels = [3, 4, 5, 6, 7]; 
+            const difficultyLevels = [2, 3];
             
+            const emojis = ['🎉', '🥳', '🤩', '✨', '🏆', '💯', '🚀', '🌟'];
+
             let currentCategory = null;
             let currentPuzzleIndex = 0;
-            let currentCategoryPuzzles = null;
             let currentLevel = 0;
             let draggingPiece = null;
             let currentUser = null;
@@ -348,7 +538,6 @@
                 }
             }
 
-            // Listen for auth state changes
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     currentUser = user;
@@ -358,13 +547,11 @@
                     currentUser = null;
                     userGameData = null;
                     updateAuthUI(false);
-                    // Hide main game UI and show auth modal
                     document.querySelector('main').style.display = 'none';
                     showModal(authModal);
                 }
             });
 
-            // Handle Login/Register form submission
             authForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = authForm.email.value;
@@ -374,7 +561,6 @@
                 
                 try {
                     if (isRegisterMode) {
-                        // Check if username is provided
                         if (!username) {
                             authStatus.textContent = 'Error: Username is required for registration.';
                             return;
@@ -466,8 +652,6 @@
                     updateGameStatsUI();
                     
                 } else {
-                    // User data doesn't exist, this should only happen for new users, so we can't load data.
-                    // This case is handled in the registration process.
                     userGameData = {};
                     updateGameStatsUI();
                 }
@@ -498,7 +682,9 @@
                 puzzleBoard.innerHTML = '';
                 piecesContainer.innerHTML = '';
                 statusMessage.textContent = ``;
-
+                nextButton.classList.add('hidden');
+                showHintButton.style.display = 'inline-block';
+                
                 currentCategory = category;
                 currentPuzzleIndex = puzzleIndex;
                 currentLevel = level;
@@ -507,12 +693,11 @@
                 document.querySelector('main').style.display = 'flex';
                 showModal(document.querySelector('main'));
 
-                const cols = difficultyLevels[level];
-                const rows = difficultyLevels[level];
-                const totalPieces = rows * cols;
+                const gridSize = difficultyLevels[level];
+                const totalPieces = gridSize * gridSize;
                 
-                puzzleBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-                piecesContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                puzzleBoard.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+                piecesContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
                 puzzleBoard.style.gap = `${2 / (level + 1)}vmin`;
                 piecesContainer.style.gap = `${2 / (level + 1)}vmin`;
 
@@ -525,8 +710,8 @@
 
                 const pieces = [];
                 for (let i = 0; i < totalPieces; i++) {
-                    const row = Math.floor(i / cols);
-                    const col = i % cols;
+                    const row = Math.floor(i / gridSize);
+                    const col = i % gridSize;
                     
                     const piece = document.createElement('div');
                     piece.classList.add('puzzle-piece', 'bg-white', 'rounded-lg', 'shadow-md', 'border-2', 'border-gray-300', 'aspect-square');
@@ -534,8 +719,8 @@
                     piece.dataset.id = i;
                     
                     piece.style.backgroundImage = `url('${currentPuzzle.img}')`;
-                    piece.style.backgroundSize = `${cols * 100}% ${rows * 100}%`;
-                    piece.style.backgroundPosition = `calc(${100 / (cols - 1)}% * ${col}) calc(${100 / (rows - 1)}% * ${row})`;
+                    piece.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
+                    piece.style.backgroundPosition = `calc(${100 / (gridSize - 1)}% * ${col}) calc(${100 / (gridSize - 1)}% * ${row})`;
 
                     pieces.push(piece);
                 }
@@ -557,7 +742,6 @@
                 resetButton.textContent = "Reset Puzzle";
             }
 
-            // --- Drag and Drop Event Listeners ---
             piecesContainer.addEventListener('dragstart', (e) => {
                 const target = e.target.closest('.puzzle-piece');
                 if (target) {
@@ -603,7 +787,6 @@
                 }
             });
 
-            // --- Win Condition Check ---
             function checkWin() {
                 const dropZones = Array.from(puzzleBoard.children).filter(el => el.classList.contains('drop-zone'));
                 const solved = dropZones.every(zone => {
@@ -613,30 +796,90 @@
 
                 if (solved) {
                     const currentPuzzleName = currentCategoryPuzzles[currentPuzzleIndex].name;
-                    statusMessage.textContent = `✅ Correct! You solved: ${currentPuzzleName}`;
+                    statusMessage.innerHTML = `✅ Correct! You solved: ${currentPuzzleName} 🥳`;
                     statusMessage.classList.remove('text-gray-400');
                     statusMessage.classList.add('text-green-400', 'animate-pulse');
-                    saveGameData();
+                    showHintButton.style.display = 'none';
 
                     setTimeout(() => {
-                        if (currentPuzzleIndex < currentCategoryPuzzles.length - 1) {
-                            currentPuzzleIndex++;
-                            initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
-                        } else if (currentLevel < difficultyLevels.length - 1) {
-                            currentLevel++;
-                            currentPuzzleIndex = 0;
-                            statusMessage.textContent = `Level ${currentLevel + 1} Unlocked! All puzzles complete for this level.`;
-                            initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
-                        } else {
-                            endGame();
-                        }
-                        statusMessage.classList.remove('text-green-400', 'animate-pulse');
-                        statusMessage.classList.add('text-gray-400');
-                    }, 2000);
+                        showStickerReward();
+                    }, 1000); 
                 }
             }
             
-            // --- Educational Purpose Function ---
+            function showStickerReward() {
+                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                stickerEmojiDisplay.textContent = randomEmoji;
+                showModal(stickerModal);
+            }
+
+            closeStickerModal.addEventListener('click', () => {
+                 stickerModal.style.display = 'none';
+                 showQuiz(currentCategoryPuzzles[currentPuzzleIndex].quiz);
+            });
+            
+            function showQuiz(quizData) {
+                quizQuestion.textContent = quizData.question;
+                quizOptions.innerHTML = '';
+                quizFeedback.textContent = '';
+                nextPuzzleQuizButton.classList.add('hidden');
+                
+                const shuffledOptions = [...quizData.options].sort(() => Math.random() - 0.5);
+                
+                shuffledOptions.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add('px-6', 'py-2', 'bg-blue-600', 'text-white', 'font-bold', 'rounded-full', 'shadow-lg', 'hover:bg-blue-700', 'transition-colors', 'duration-300');
+                    button.addEventListener('click', () => handleQuizAnswer(option, quizData.answer));
+                    quizOptions.appendChild(button);
+                });
+                
+                showModal(quizModal);
+            }
+            
+            function handleQuizAnswer(selectedOption, correctAnswer) {
+                if (selectedOption === correctAnswer) {
+                    quizFeedback.textContent = 'Correct! Great job! ✅';
+                    quizFeedback.classList.remove('text-red-400');
+                    quizFeedback.classList.add('text-green-400');
+                    nextPuzzleQuizButton.classList.remove('hidden');
+                } else {
+                    quizFeedback.textContent = `Incorrect. The correct answer was: ${correctAnswer} 😔`;
+                    quizFeedback.classList.remove('text-green-400');
+                    quizFeedback.classList.add('text-red-400');
+                    nextPuzzleQuizButton.classList.remove('hidden');
+                }
+                
+                Array.from(quizOptions.children).forEach(button => {
+                    button.disabled = true;
+                    if (button.textContent === correctAnswer) {
+                        button.classList.add('bg-green-500');
+                    } else if (button.textContent === selectedOption) {
+                        button.classList.add('bg-red-500');
+                    }
+                });
+            }
+            
+            nextPuzzleQuizButton.addEventListener('click', () => {
+                quizModal.style.display = 'none';
+                
+                if (currentPuzzleIndex < currentCategoryPuzzles.length - 1) {
+                    currentPuzzleIndex++;
+                    initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                } else if (currentLevel < difficultyLevels.length - 1) {
+                    currentLevel++;
+                    currentPuzzleIndex = 0;
+                    statusMessage.textContent = `Level ${currentLevel + 1} Unlocked! All puzzles complete for this level.`;
+                    initializeGame(currentCategory, currentPuzzleIndex, currentLevel);
+                } else {
+                    endGame();
+                }
+                
+                statusMessage.classList.remove('text-green-400', 'animate-pulse');
+                statusMessage.classList.add('text-gray-400');
+                saveGameData();
+            });
+
             function displayEducationalPurpose() {
                 const purposeText = `
                     <h2 class="text-3xl font-bold mb-4 text-indigo-400">Why Puzzles? 🧠</h2>
@@ -674,7 +917,6 @@
                 setTimeout(displayEducationalPurpose, 1500);
             }
 
-            // --- Button Event Listeners ---
             resetButton.addEventListener('click', () => {
                 if (resetButton.textContent === "Play Again?") {
                     showModal(categoryModal);
@@ -721,7 +963,6 @@
                 gameProgress.textContent = ``;
                 statusMessage.textContent = "";
                 
-                // Save progress before exiting
                 if (currentUser) {
                     saveGameData();
                 }
@@ -734,7 +975,7 @@
                 if (currentUser) {
                     saveGameData();
                 }
-                window.close(); // Closes the current browser window/tab
+                window.close(); 
             });
 
             howToPlayButton.addEventListener('click', () => {
@@ -743,10 +984,8 @@
             
             closeInstructionsButton.addEventListener('click', () => {
                 if (currentCategory) {
-                    // Return to the current game if one is active
                     showModal(document.querySelector('main'));
                 } else {
-                    // Otherwise, go back to the category selection
                     showModal(categoryModal);
                 }
             });
@@ -764,11 +1003,9 @@
                 if (category) {
                     const savedProgress = userGameData?.gameProgress;
                     if (savedProgress && savedProgress.currentCategory === category && currentUser) {
-                        // Load saved game progress
                         currentPuzzleIndex = savedProgress.currentPuzzleIndex;
                         currentLevel = savedProgress.currentLevel;
                     } else {
-                        // Start a new game for this category
                         currentPuzzleIndex = 0;
                         currentLevel = 0;
                     }
@@ -777,7 +1014,6 @@
                 }
             });
 
-            // Initially, show the auth modal
             showModal(authModal);
         });
     </script>
